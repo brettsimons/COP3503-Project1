@@ -7,9 +7,9 @@
 
 #include "Exponent.h"
 
-Exponent::Exponent() {
-	// TODO Auto-generated constructor stub
-
+Exponent::Exponent(Number& base, Number& exponent) {
+	this->base = &base;
+	this->exponent = &exponent;
 }
 
 Exponent::~Exponent() {

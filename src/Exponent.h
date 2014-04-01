@@ -9,27 +9,27 @@
 #define EXPONENT_H_
 
 #include "Number.h"
-
-using namespace std;
+#include <string>
 
 class Exponent: public Number {
 public:
-	Exponent();
+	Exponent(Number& base, Number& exponent);
 	virtual ~Exponent();
 
-	template<class T1, class T2>
-	string operator+(T1 lhs, T2 rhs);
-	template<class T1, class T2>
-	string operator-(T1 lhs, T2 rhs);
-	template<class T1, class T2>
-	string operator*(T1 lhs, T2 rhs);
-	template<class T1, class T2>
-	string operator/(T1 lhs, T2 rhs);
+	std::string operator+(Number& rhs);
+	std::string operator-(Number& rhs);
+	std::string operator*(Number& rhs);
+	std::string operator/(Number& rhs);
 
-	string toString();
+	std::string toString();
+	std::vector<std::pair<Number*, char> > simplify();
+
+	Number& getBase();
+	Number& getExponent();
 
 private:
-	int lcm(int denom1, int denom2);
+	Number * base;
+	Number * exponent;
 };
 
 #endif /* EXPONENT_H_ */

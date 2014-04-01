@@ -6,20 +6,89 @@
  */
 
 #include "Integer.h"
+#include <typeinfo>
+#include <sstream>
+#include <vector>
 
-using namespace std;
-
-Integer::Integer() {
-	// TODO Auto-generated constructor stub
-
+Integer::Integer(int toContain) {
+	this->intContainer = toContain;
 }
 
 Integer::~Integer() {
 	// TODO Auto-generated destructor stub
 }
 
-template<typename T1, typename T2>
-string operator+(T1 first, T2 second) {
+std::string Integer::operator+(Number& rhs) {
+	std::stringstream ss;
 
+	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
+		int answer = this->intContainer + rhsCast->intContainer;
+		delete rhsCast;
+
+		ss << answer;
+		return ss.str();
+	} else {
+		return this->toString() + "+" + rhs.toString();
+	}
 }
 
+std::string Integer::operator-(Number& rhs) {
+	std::stringstream ss;
+
+	if (Integer * intCast = dynamic_cast<Integer*>(&rhs)) {
+		int answer = this->intContainer - intCast->intContainer;
+		delete intCast;
+
+		ss << answer;
+		return ss.str();
+	} else {
+		return this->toString() + "-" + rhs.toString();
+	}
+}
+
+std::string Integer::operator*(Number& rhs) {
+	std::stringstream ss;
+
+	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
+		int answer = this->intContainer * rhsCast->intContainer;
+		delete rhsCast;
+
+		ss << answer;
+		return ss.str();
+	} else {
+		return this->toString() + "*" + rhs.toString();
+	}
+}
+
+std::string Integer::operator/(Number& rhs) {
+	std::stringstream ss;
+
+	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
+		int answer = this->intContainer / rhsCast->intContainer;
+		delete rhsCast;
+
+		ss << answer;
+		return ss.str();
+	} else {
+		return this->toString() + "/" + rhs.toString();
+	}
+}
+
+std::string Integer::toString() {
+	std::stringstream ss;
+	ss << this->intContainer;
+
+	return ss.str();
+}
+
+std::vector<std::pair<Number*, char> > Integer::simplify() {
+	std::vector<std::pair<Number*, char> > vectorPair;
+	Number * num = this;
+	vectorPair.push_back(std::make_pair<Number*, char>(num, NULL));
+
+	return vectorPair;
+}
+
+int Integer::getInt() {
+	return intContainer;
+}

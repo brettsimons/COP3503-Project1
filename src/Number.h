@@ -8,25 +8,25 @@
 #ifndef NUMBER_H_
 #define NUMBER_H_
 
-#include <vector>
-
-using namespace std;
+#include<vector>
+#include<string>
 
 class Number {
 	public:
-		template<class T1, class T2>
-		virtual string operator+(T1 lhs, T2 rhs) = 0;
-		template<class T1, class T2>
-		virtual string operator-(T1 lhs, T2 rhs) = 0;
-		template<class T1, class T2>
-		virtual string operator*(T1 lhs, T2 rhs) = 0;
-		template<class T1, class T2>
-		virtual string operator/(T1 lhs, T2 rhs) = 0;
+		Number();
+		virtual ~Number();
 
-		virtual string toString() = 0;
+		virtual std::string operator+(Number& rhs) = 0;
+		virtual std::string operator-(Number& rhs) = 0;
+		virtual std::string operator*(Number& rhs) = 0;
+		virtual std::string operator/(Number& rhs) = 0;
+
+		virtual std::vector<std::pair<Number*, char> > simplify() = 0;
+		virtual std::string toString() = 0;
 
 	private:
-		int lcm(int denom1, int denom2);
+		template<class T1, class T2>
+		std::string lcm(T1 denom1, T2 denom2);
 };
 
 

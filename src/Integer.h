@@ -8,10 +8,28 @@
 #ifndef INTEGER_H_
 #define INTEGER_H_
 
-class Integer {
+#include<string>
+#include<vector>
+#include "Number.h"
+#include "Exponent.h"
+
+class Integer: public Number {
 public:
-	Integer();
+	Integer(int toContain);
 	virtual ~Integer();
+
+	std::string operator+(Number& rhs);
+	std::string operator-(Number& rhs);
+	std::string operator*(Number& rhs);
+	std::string operator/(Number& rhs);
+
+	std::string toString();
+	std::vector<std::pair<Number*, char> > simplify();
+
+	int getInt();
+
+private:
+	int intContainer;
 };
 
 #endif /* INTEGER_H_ */

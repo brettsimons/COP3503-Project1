@@ -5,9 +5,11 @@
  *      Author: Brett
  */
 
-#include "C:Variable.h"
+#include "Variable.h"
 
-Variable::Variable() {
+using namespace std;
+
+Variable::Variable(string variable) {
 	// TODO Auto-generated constructor stub
 
 }

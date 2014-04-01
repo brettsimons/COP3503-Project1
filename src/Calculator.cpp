@@ -9,7 +9,7 @@
 
 Calculator::Calculator() {
 	operators = new list<char>();
-	numbers = new list<Number>();
+	numbers = new list<Number*>();
 }
 
 Calculator::~Calculator() {
@@ -49,7 +49,7 @@ string Calculator::Calculate(string equationSegment) {
 				// TODO: Create root type and add to numbers list.
 			}
 
-			operators.push_back('*');
+			operators->push_back('*');
 		} else if (equationSegment[i] == '/') {
 			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
 			if (numType == 0) {
@@ -62,7 +62,7 @@ string Calculator::Calculate(string equationSegment) {
 				// TODO: Create root type and add to numbers list.
 			}
 
-			operators.push_back('/');
+			operators->push_back('/');
 		}
 	}
 
@@ -80,7 +80,7 @@ string Calculator::Calculate(string equationSegment) {
 				// TODO: Create root type and add to numbers list.
 			}
 
-			operators.push_back('+');
+			operators->push_back('+');
 		} else if (equationSegment[i] == '-') {
 			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
 			if (numType == 0) {
@@ -93,7 +93,7 @@ string Calculator::Calculate(string equationSegment) {
 				// TODO: Create root type and add to numbers list.
 			}
 
-			operators.push_back('-');
+			operators->push_back('-');
 		}
 	}
 }

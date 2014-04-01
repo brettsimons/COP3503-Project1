@@ -5,11 +5,11 @@
  *      Author: Brett
  */
 
-#include "C:Root.h"
+#include "Root.h"
 
-Root::Root() {
-	// TODO Auto-generated constructor stub
-
+Root::Root(Number& base, Number& root) {
+	this->base = &base;
+	this->root = &root;
 }
 
 Root::~Root() {

@@ -5,11 +5,11 @@
  *      Author: Brett
  */
 
-#include "C:Log.h"
+#include "Log.h"
 
-Log::Log() {
-	// TODO Auto-generated constructor stub
-
+Log::Log(Number& base, Number& argument) {
+	this->base = &base;
+	this->argument = &argument;
 }
 
 Log::~Log() {

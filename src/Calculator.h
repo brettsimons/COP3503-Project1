@@ -24,8 +24,8 @@ private:
 	string Calculate(string equation);
 	string UnpackExpression(string equationSegment);
 	int CheckNumberType(string number);
-	list<Number> numbers;
-	list<char> operators;
+	list<Number*> * numbers;
+	list<char> * operators;
 };
 
 #endif /* CALCULATOR_H_ */
