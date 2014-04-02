@@ -10,6 +10,8 @@
 
 #include<string>
 #include "Number.h"
+#include "Exponent.h"
+#include "Integer.h"
 
 class Variable: public Number {
 public:
@@ -25,9 +27,11 @@ public:
 	std::vector<std::pair<Number*, char> > simplify();
 
 	std::string getVariable();
+	Number& getMultiplier();
 
 private:
 	std::string var;
+	Number * multiplier;
 };
 
 #endif /* VARIABLE_H_ */

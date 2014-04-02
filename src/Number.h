@@ -24,9 +24,9 @@ class Number {
 		virtual std::vector<std::pair<Number*, char> > simplify() = 0;
 		virtual std::string toString() = 0;
 
-	private:
 		template<class T1, class T2>
 		std::string lcm(T1 denom1, T2 denom2);
+		int gcd(int num1, int num2);
 };
 
 

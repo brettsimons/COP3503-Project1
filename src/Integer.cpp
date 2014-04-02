@@ -28,6 +28,7 @@ std::string Integer::operator+(Number& rhs) {
 		ss << answer;
 		return ss.str();
 	} else {
+		delete rhsCast;
 		return this->toString() + "+" + rhs.toString();
 	}
 }
@@ -42,6 +43,7 @@ std::string Integer::operator-(Number& rhs) {
 		ss << answer;
 		return ss.str();
 	} else {
+		delete intCast;
 		return this->toString() + "-" + rhs.toString();
 	}
 }
@@ -56,6 +58,7 @@ std::string Integer::operator*(Number& rhs) {
 		ss << answer;
 		return ss.str();
 	} else {
+		delete rhsCast;
 		return this->toString() + "*" + rhs.toString();
 	}
 }
@@ -64,10 +67,17 @@ std::string Integer::operator/(Number& rhs) {
 	std::stringstream ss;
 
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
-		int answer = this->intContainer / rhsCast->intContainer;
-		delete rhsCast;
+		if (this->intContainer % rhsCast->intContainer == 0) {
+			int answer = this->intContainer / rhsCast->intContainer;
+			delete rhsCast;
 
-		ss << answer;
+			ss << answer;
+		} else {
+			int gcdResult = gcd(this->intContainer, rhsCast->intContainer);
+			int numerator = this->intContainer / gcdResult;
+			int denominator = rhsCast->intContainer / gcdResult;
+			ss << numerator << "/" << denominator;
+		}
 		return ss.str();
 	} else {
 		return this->toString() + "/" + rhs.toString();
