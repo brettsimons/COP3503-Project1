@@ -7,6 +7,8 @@
 
 #include "Calculator.h"
 
+using namespace std;
+
 Calculator::Calculator() {
 	operators = new list<char>();
 	numbers = new list<Number*>();
@@ -22,7 +24,7 @@ string Calculator::UnpackExpression(string equation) {
 
 	for (int i = 0; i < equation.length(); i++) {
 		if (equation[i] == ')') {
-			for (int x = i; x > 0; x++) {
+			for (int x = i; x > 0; x--) {
 				if (equation[x] == '(') {
 					Calculate(equationSegment.substr(x, i-x));
 				}
@@ -41,8 +43,10 @@ string Calculator::Calculate(string equationSegment) {
 			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
 			if (numType == 0) {
 				// TODO: Create integer type and add to numbers list.
+				Number * integer = new Integer(atoi(segmentPart.substr(0, i - 1).c_str()));
+				numbers->push_back(integer);
 			} else if (numType == 1) {
-				// TODO: Create exponent type and add to numbers list.
+
 			} else if (numType == 2) {
 				// TODO: Create log type and add to numbers list.
 			} else if (numType == 3) {
@@ -99,5 +103,9 @@ string Calculator::Calculate(string equationSegment) {
 }
 
 int Calculator::CheckNumberType(string number) {
+
+}
+
+Number& Calculator::CreateObject(string object) {
 
 }

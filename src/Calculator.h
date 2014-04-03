@@ -12,8 +12,11 @@
 #include <list>
 #include <algorithm>
 #include "Number.h"
-
-using namespace std;
+#include "Exponent.h"
+#include "Integer.h"
+#include "Log.h"
+#include "Root.h"
+#include "Variable.h"
 
 class Calculator {
 public:
@@ -21,11 +24,12 @@ public:
 	virtual ~Calculator();
 
 private:
-	string Calculate(string equation);
-	string UnpackExpression(string equationSegment);
-	int CheckNumberType(string number);
-	list<Number*> * numbers;
-	list<char> * operators;
+	std::string Calculate(std::string equation);
+	std::string UnpackExpression(std::string equationSegment);
+	int CheckNumberType(std::string number);
+	std::list<Number*> * numbers;
+	std::list<char> * operators;
+	Number& CreateObject(std::string object);
 };
 
 #endif /* CALCULATOR_H_ */
