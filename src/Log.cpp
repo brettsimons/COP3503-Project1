@@ -16,3 +16,35 @@ Log::~Log() {
 	// TODO Auto-generated destructor stub
 }
 
+std::string Log::operator+(Number& rhs) {
+
+}
+
+std::string Log::operator-(Number& rhs) {
+
+}
+
+std::string Log::operator*(Number& rhs) {
+
+}
+
+std::string Log::operator/(Number& rhs) {
+
+}
+
+std::string Log::toString() {
+
+}
+
+std::vector<std::pair<Number*, char> > Log::simplify() {
+
+}
+
+Number& Log::getBase() {
+
+}
+
+Number& Log::getArgument() {
+
+}
+

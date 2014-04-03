@@ -23,3 +23,27 @@ Number& Exponent::getBase() {
 Number& Exponent::getExponent() {
 	return *this->exponent;
 }
+
+std::string Exponent::operator+(Number& rhs) {
+
+}
+
+std::string Exponent::operator-(Number& rhs) {
+
+}
+
+std::string Exponent::operator*(Number& rhs) {
+
+}
+
+std::string Exponent::operator/(Number& rhs) {
+
+}
+
+std::string Exponent::toString() {
+
+}
+
+std::vector<std::pair<Number*, char> > Exponent::simplify() {
+
+}

@@ -16,3 +16,34 @@ Root::~Root() {
 	// TODO Auto-generated destructor stub
 }
 
+std::string Root::operator+(Number& rhs) {
+
+}
+
+std::string Root::operator-(Number& rhs) {
+
+}
+
+std::string Root::operator*(Number& rhs) {
+
+}
+
+std::string Root::operator/(Number& rhs) {
+
+}
+
+std::string Root::toString() {
+
+}
+
+std::vector<std::pair<Number*, char> > Root::simplify() {
+
+}
+
+Number& Root::getBase() {
+
+}
+
+Number& Root::getRoot() {
+
+}
