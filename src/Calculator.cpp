@@ -10,8 +10,8 @@
 using namespace std;
 
 Calculator::Calculator() {
-	operators = new list<char>();
-	numbers = new list<Number*>();
+	operators = new vector<char>();
+	numbers = new vector<Number*>();
 }
 
 Calculator::~Calculator() {

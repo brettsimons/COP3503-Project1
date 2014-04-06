@@ -10,16 +10,22 @@
 
 #include "Number.h"
 #include <string>
+#include "Placeholder.h"
+#include "Integer.h"
+#include "Log.h"
+#include "Root.h"
+#include "Variable.h"
 
 class Exponent: public Number {
 public:
 	Exponent(Number& base, Number& exponent);
 	virtual ~Exponent();
 
-	std::string operator+(Number& rhs);
-	std::string operator-(Number& rhs);
-	std::string operator*(Number& rhs);
-	std::string operator/(Number& rhs);
+	Number& operator+(Number& rhs);
+	Number& operator-(Number& rhs);
+	Number& operator*(Number& rhs);
+	Number& operator/(Number& rhs);
+	bool operator==(Number& rhs);
 
 	std::string toString();
 	std::vector<std::pair<Number*, char> > simplify();

@@ -16,10 +16,11 @@ class Number {
 		Number();
 		virtual ~Number();
 
-		virtual std::string operator+(Number& rhs) = 0;
-		virtual std::string operator-(Number& rhs) = 0;
-		virtual std::string operator*(Number& rhs) = 0;
-		virtual std::string operator/(Number& rhs) = 0;
+		virtual Number& operator+(Number& rhs) = 0;
+		virtual Number& operator-(Number& rhs) = 0;
+		virtual Number& operator*(Number& rhs) = 0;
+		virtual Number& operator/(Number& rhs) = 0;
+		virtual bool operator==(Number& rhs) = 0;
 
 		virtual std::vector<std::pair<Number*, char> > simplify() = 0;
 		virtual std::string toString() = 0;

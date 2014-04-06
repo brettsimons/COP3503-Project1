@@ -9,11 +9,10 @@
 #define CALCULATOR_H_
 
 #include <string>
-#include <list>
 #include <algorithm>
+#include <vector>
 #include "Number.h"
 #include "Exponent.h"
-#include "Integer.h"
 #include "Log.h"
 #include "Root.h"
 #include "Variable.h"
@@ -27,8 +26,8 @@ private:
 	std::string Calculate(std::string equation);
 	std::string UnpackExpression(std::string equationSegment);
 	int CheckNumberType(std::string number);
-	std::list<Number*> * numbers;
-	std::list<char> * operators;
+	std::vector<Number*> * numbers;
+	std::vector<char> * operators;
 	Number& CreateObject(std::string object);
 };
 
