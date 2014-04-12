@@ -1,9 +1,10 @@
-/*
- * Log.cpp
- *
- *  Created on: Mar 20, 2014
- *      Author: Brett
- */
+//
+//  Log.cpp
+//  Log
+//
+//  Created by John Calderaio on 4/7/14.
+//  Copyright (c) 2014 John Calderaio. All rights reserved.
+//
 
 #include "Log.h"
 
@@ -18,34 +19,158 @@ Log::~Log() {
 
 Number& Log::operator+(Number& rhs) {
 
+    if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
+		if(rhsCast->getBase() == *this->base) {
+            Number * answer = &(rhsCast->getArgument() * *this->argument);
+            delete rhsCast;
+            Number * log = new Log(*base, *answer);
+            return * log;
+        }
+	} else {
+		delete rhsCast;
+
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs + *this;
+		}
+
+		else {
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(&rhs);
+			operators.push_back('+');
+			Number * placeholder = new Placeholder(numbers, operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Log::operator-(Number& rhs) {
+
+    if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
+		if(rhsCast->getBase() == *this->base) {
+            Number * answer = &(rhsCast->getArgument() / *this->argument);
+            delete rhsCast;
+            Number * log = new Log(*base, *answer);
+            return * log;
+        }
+	} else {
+		delete rhsCast;
+
+		if (typeid(rhs) == typeid(Placeholder)) {
+			Number * negativeOne = new Integer(-1);
+            Number * negativePlaceholder = &(rhs * *negativeOne);
+            return *negativePlaceholder + *this;
+		}
+
+		else {
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(&rhs);
+			operators.push_back('-');
+			Number * placeholder = new Placeholder(numbers, operators);
+			return *placeholder;
+		}
+	}
 
 }
 
 Number& Log::operator*(Number& rhs) {
 
+    if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
+		if((rhsCast->getBase() == *this->base) && (rhsCast->getArgument() == *this->argument)) {
+            delete rhsCast;
+    		Number * raisedTo = new Integer(2);
+            Number * exp = new Exponent(*this, *raisedTo);
+            return * exp;
+        }
+    }
+
+    else if(typeid(rhs) == typeid(Exponent)) {
+        Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
+
+        if(rhsCast->getBase() == *this) {
+        		Number * toAdd = new Integer(1);
+            	Number * raisedTo = &(rhsCast->getExponent() + *toAdd);
+                Number * exp = new Exponent(*this, *raisedTo);
+                return * exp;
+            }
+           else {
+               std::vector<Number*> numbers;
+               std::vector<char> operators;
+               numbers.push_back(this);
+               numbers.push_back(&rhs);
+               operators.push_back('*');
+               Number * placeholder = new Placeholder(numbers, operators);
+               return *placeholder;
+           }
+        }
+
+    else {
+		delete rhsCast;
+
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs * *this;
+		}
+
+		else {
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(&rhs);
+			operators.push_back('*');
+			Number * placeholder = new Placeholder(numbers, operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Log::operator/(Number& rhs) {
 
+    if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
+		if(rhsCast->getBase() == *this->base) {
+            Number * log = new Log(this->getArgument(), rhsCast->getArgument());
+            return * log;
+        }
+	} else {
+		delete rhsCast;
+
+		if (typeid(rhs) == typeid(Placeholder)) {
+			Number * reciprical = new Integer(1);
+			return (*reciprical / (rhs / *this));
+		}
+
+		else {
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(&rhs);
+			operators.push_back('/');
+			Number * placeholder = new Placeholder(numbers, operators);
+			return *placeholder;
+		}
+	}
 }
 
 std::string Log::toString() {
-
+    return "log_" + this->base->toString() + ":(" + this->argument->toString() + ")";
 }
 
 std::vector<std::pair<Number*, char> > Log::simplify() {
+    std::vector<std::pair<Number*, char> > vectorPair;
+    Number * num = this;
+    vectorPair.push_back(std::make_pair<Number*, char>(num, NULL));
 
+    return vectorPair;
 }
 
 Number& Log::getBase() {
-
+    return *this->base;
 }
 
 Number& Log::getArgument() {
-
+    return *this->argument;
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to
@@ -151,6 +276,4 @@ bool Log::operator==(Number& rhs) {
 	} else {
 		return false;
 	}
-}
-
-
+  }
