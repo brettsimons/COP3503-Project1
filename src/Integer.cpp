@@ -25,8 +25,6 @@ Integer::~Integer() {
 }
 
 Number& Integer::operator+(Number& rhs) {
-	std::stringstream ss;
-
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
 		int answer = this->intContainer + rhsCast->intContainer;
 		delete rhsCast;
@@ -53,8 +51,6 @@ Number& Integer::operator+(Number& rhs) {
 }
 
 Number& Integer::operator-(Number& rhs) {
-	std::stringstream ss;
-
 	if (Integer * intCast = dynamic_cast<Integer*>(&rhs)) {
 		int answer = this->intContainer - intCast->intContainer;
 		delete intCast;
@@ -65,7 +61,9 @@ Number& Integer::operator-(Number& rhs) {
 		delete intCast;
 
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs - *this;
+			Number * negativeOne = new Integer(-1);
+			Number * negativePlaceholder = &(rhs * *negativeOne);
+			return *negativePlaceholder + *this;
 		}
 
 		else {

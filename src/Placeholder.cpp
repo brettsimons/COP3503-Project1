@@ -393,16 +393,47 @@ Number& Placeholder::operator-(Number& rhs) {
 				return *this;
 			}
 		}
-
 	}
 }
 
 Number& Placeholder::operator*(Number& rhs) {
+	if (typeid(rhs) == typeid(Placeholder)) {
+		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
+		std::vector<Number*> rhsNumberList = rhsCast->getNumbers();
+		std::vector<char> rhsOperatorList = rhsCast->getOperators();
 
+		for (int i = 0; i < rhsNumberList.capacity(); i++) {
+			Number * multiplication = &(*this * *rhsNumberList[i]);
+
+			if (typeid(multiplication) == typeid(Placeholder)) {
+				Placeholder * tempPlaceholder = dynamic_cast<Placeholder*>(multiplication);
+				this->numbers = &tempPlaceholder->getNumbers();
+				this->operators = &tempPlaceholder->getOperators();
+			} else {
+				this->numbers->clear();
+				this->operators->clear();
+				this->numbers->push_back(multiplication);
+			}
+		}
+
+		if (this->numbers->capacity() == 1) {
+			return *this->numbers->at(0);
+		} else {
+			return *this;
+		}
+	} else {
+		for (int i = 0; i < this->operators->capacity(); i++) {
+			if (this->operators->at(i) == '/') {
+				//if (typeid(this->numbers->at(i)) == typeid())
+			} else if (this->operators->at(i) == '+' || this->operators->at(i) == '-') {
+
+			}
+		}
+	}
 }
 
 Number& Placeholder::operator/(Number& rhs) {
-
+	// TODO: sepcifically account for 1 / some fraction.
 }
 
 std::string Placeholder::toString() {
