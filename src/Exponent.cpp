@@ -44,7 +44,7 @@ std::string Exponent::toString() {
 
 }
 
-std::vector<std::pair<Number*, char> > Exponent::simplify() {
+Number& Exponent::simplify() {
 
 }
 

@@ -36,7 +36,7 @@ std::string Root::toString() {
 
 }
 
-std::vector<std::pair<Number*, char> > Root::simplify() {
+Number& Root::simplify() {
 
 }
 

@@ -424,11 +424,51 @@ Number& Placeholder::operator*(Number& rhs) {
 	} else {
 		for (int i = 0; i < this->operators->capacity(); i++) {
 			if (this->operators->at(i) == '/') {
-				//if (typeid(this->numbers->at(i)) == typeid())
+				i++;
+				this->numbers->at(i) = &(*this->numbers->at(i - 1) * rhs);
 			} else if (this->operators->at(i) == '+' || this->operators->at(i) == '-') {
+				this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
+			} else if (this->operators->at(i) == '*') {
+				int numberOfMoreMult = 0;
 
+				for (int x = i; x < this->operators->capacity(); x++) {
+					if (this->operators->at(x) == '+' || this->operators->at(x) == '-' || this->operators->at(x) == '/') {
+						x = this->operators->capacity();
+					} else if (this->operators->at(x) == '*') {
+						numberOfMoreMult++;
+					}
+				}
+
+				if (numberOfMoreMult > 0) {
+					bool typeMatchFound = false;
+
+					for (int x = 0; x < numberOfMoreMult; x++) {
+						if (typeid(this->numbers->at(i)) == typeid(rhs)) {
+							typeMatchFound = true;
+							this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
+						}
+					}
+
+					if (!typeMatchFound) {
+						for (int x = 0; x < numberOfMoreMult; x++) {
+							if ((typeid(this->numbers->at(i)) == typeid(Root) && typeid(rhs) == typeid(Exponent)) || (typeid(this->numbers->at(i)) == typeid(Exponent) && typeid(rhs) == typeid(Root))) {
+								this->numbers->at(i) == &(*this->numbers->at(i) * rhs);
+								typeMatchFound = true;
+							}
+						}
+
+						if (!typeMatchFound) {
+							this->numbers->insert(this->numbers->begin() + i, 1, &rhs);
+							this->operators->insert(this->operators->begin() + i, 1, '*');
+						}
+					}
+				} else {
+					this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
+				}
 			}
 		}
+
+		return *this;
 	}
 }
 
@@ -440,7 +480,7 @@ std::string Placeholder::toString() {
 
 }
 
-std::vector<std::pair<Number*, char> > Placeholder::simplify() {
+Number& Placeholder::simplify() {
 
 }
 

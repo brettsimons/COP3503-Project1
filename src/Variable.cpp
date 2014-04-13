@@ -271,12 +271,8 @@ std::string Variable::toString() {
 	return var;
 }
 
-std::vector<std::pair<Number*, char> > Variable::simplify() {
-	std::vector<std::pair<Number*, char> > vectorPair;
-	Number * num = this;
-	vectorPair.push_back(std::make_pair<Number*, char>(num, NULL));
-
-	return vectorPair;
+Number& Variable::simplify() {
+	return *this;
 }
 
 std::string Variable::getVariable() {

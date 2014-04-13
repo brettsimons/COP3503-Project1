@@ -157,12 +157,66 @@ std::string Log::toString() {
     return "log_" + this->base->toString() + ":(" + this->argument->toString() + ")";
 }
 
-std::vector<std::pair<Number*, char> > Log::simplify() {
-    std::vector<std::pair<Number*, char> > vectorPair;
-    Number * num = this;
-    vectorPair.push_back(std::make_pair<Number*, char>(num, NULL));
+Number& Log::simplify() {
+	if (typeid(argument) == typeid(Integer) && typeid(base) == typeid(Integer)) {
+		Integer * argumentInt = dynamic_cast<Integer*>(argument);
+		Integer * baseInt = dynamic_cast<Integer*>(base);
 
-    return vectorPair;
+		if(log10(argumentInt->getInt())/log10(baseInt->getInt()) ) {   //checks to see if the log operator reduces to an integer
+			int ans = log10(argumentInt->getInt())/log10(baseInt->getInt());
+    		Number *answer = new Integer(ans);
+    		return *answer;
+		} else {
+			int tempMax = 0;
+			for(int i = 1; i < argumentInt->getInt(); i++) {             //breaks down the log into different logs if possible
+				int n = pow(argumentInt->getInt(), i);
+				if((argumentInt->getInt() % n) == 0) {
+					if(tempMax < n) {
+						tempMax = n;
+					}
+				}
+			}
+			int aRHS = argumentInt->getInt() / tempMax;
+			int ans1 = log10(tempMax)/log10(baseInt->getInt());
+
+			int powMax = 0;
+			int logBase = 0;
+			for(int i = 2; i < aRHS; i++) {                   //breaks down the argument into exponents and puts in front of log
+			   for(int j = 2; pow(i,j) <= aRHS; j++) {
+				   if((aRHS % (int)pow(i,j)) == 0) {
+					   powMax = j;
+					   logBase = i;
+				   }
+			   }
+			}
+			Number*  ebase = new Integer(ans1);
+			Number* secondHalf = new Log(*base, *ebase);
+
+			/*std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(firstHalf);
+			operators.push_back('+');
+			Number * placeholder = new Placeholder(numbers, operators);
+			*/
+
+			Number* powMaxNum = new Integer(powMax);
+
+			std::vector<Number*> numbs;
+			std::vector<char> ops;
+			numbs.push_back(powMaxNum);
+			numbs.push_back(secondHalf);
+			ops.push_back('*'); //If there is a way to just have, for example, 2log2 instead of 2*log2 then do DAT.
+			Number * placeholder2 = new Placeholder(numbs, ops);
+
+			std::vector<Number*> numb;
+			std::vector<char> op;
+			numb.push_back(ebase);
+			numb.push_back(placeholder2);
+			op.push_back('+');
+			Number * FinalPlaceholder = new Placeholder(numb, op);
+			return * FinalPlaceholder;
+		}
+	}
 }
 
 Number& Log::getBase() {

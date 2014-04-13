@@ -21,14 +21,15 @@ class Calculator {
 public:
 	Calculator();
 	virtual ~Calculator();
+	std::string SimplifyExpression(std::string equationSegment);
 
 private:
-	std::string Calculate(std::string equation);
-	std::string UnpackExpression(std::string equationSegment);
+	Number& Calculate(std::string equation);
+	Number& PerformCalculations();
 	int CheckNumberType(std::string number);
 	std::vector<Number*> * numbers;
 	std::vector<char> * operators;
-	Number& CreateObject(std::string object);
+	bool IsPlaceholder(std::string number);
 };
 
 #endif /* CALCULATOR_H_ */

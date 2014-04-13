@@ -9,7 +9,8 @@
 #define LOG_H_
 
 #include "Number.h"
-#include<string>
+#include <string>
+#include <cmath>
 #include "Exponent.h"
 #include "Integer.h"
 #include "Placeholder.h"
@@ -28,7 +29,7 @@ public:
 	bool operator==(Number& rhs);
 
 	std::string toString();
-	std::vector<std::pair<Number*, char> > simplify();
+	Number& simplify();
 
 	Number& getBase();
 	Number& getArgument();

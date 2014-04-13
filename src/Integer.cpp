@@ -292,12 +292,8 @@ std::string Integer::toString() {
 	return ss.str();
 }
 
-std::vector<std::pair<Number*, char> > Integer::simplify() {
-	std::vector<std::pair<Number*, char> > vectorPair;
-	Number * num = this;
-	vectorPair.push_back(std::make_pair<Number*, char>(num, NULL));
-
-	return vectorPair;
+Number& Integer::simplify() {
+	return *this;
 }
 
 int Integer::getInt() {

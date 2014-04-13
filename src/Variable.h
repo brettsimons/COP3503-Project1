@@ -28,7 +28,7 @@ public:
 	bool operator==(Number& rhs);
 
 	std::string toString();
-	std::vector<std::pair<Number*, char> > simplify();
+	Number& simplify();
 
 	std::string getVariable();
 

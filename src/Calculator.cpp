@@ -18,94 +18,272 @@ Calculator::~Calculator() {
 	// TODO Auto-generated destructor stub
 }
 
-string Calculator::UnpackExpression(string equation) {
+string Calculator::SimplifyExpression(string equation) {
 	equation.erase(std::remove(equation.begin(), equation.end(), ' '), equation.end());
-	string equationSegment = equation;
+	int indexOfLastOp = -1;
 
 	for (int i = 0; i < equation.length(); i++) {
-		if (equation[i] == ')') {
-			for (int x = i; x > 0; x--) {
-				if (equation[x] == '(') {
-					Calculate(equationSegment.substr(x, i-x));
+		string equationSegment = equation;
+
+		if (i + 1 == equation.length()) {
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length() - 1));
+			numbers->push_back(lhs);
+		} else if (equation[i] == '(') {
+			bool foundClose = false;
+			bool isEnd = false;
+			char nextOp;
+			for (int x = i; x > equation.length(); x++) {
+				if (equation[x] == ')') {
+					i = x;
 				}
-				else {
-					// TODO: invalid equation exception
+
+				if ((equation[x] == '*' || equation[x] == '/' || equation[x] == '+' || equation[x] == '-' || x + 1 == equation.length()) && foundClose) {
+					if (x + 1 == equation.length()) {
+						isEnd = true;
+					} else {
+						nextOp = equation[x];
+					}
 				}
 			}
+
+			if (isEnd) {
+				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length() - 1));
+				numbers->push_back(lhs);
+			} else {
+				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				numbers->push_back(lhs);
+				operators->push_back(nextOp);
+			}
+		} else if (equation[i] == '*') {
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+			numbers->push_back(lhs);
+			operators->push_back('*');
+		} else if (equation[i] == '/') {
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+			numbers->push_back(lhs);
+			operators->push_back('/');
+		} else if (equation[i] == '+') {
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+			numbers->push_back(lhs);
+			operators->push_back('+');
+		} else if (equation[i] == '-') {
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+			numbers->push_back(lhs);
+			operators->push_back('-');
 		}
+
+		indexOfLastOp = i;
+	}
+
+	Number * result = &PerformCalculations();
+	string stringResult = result->toString();
+	delete result;
+	return stringResult;
+}
+
+Number& Calculator::PerformCalculations() {
+	for (int i = 0; i < operators->capacity(); i++) {
+		if (operators->at(i) == '*') {
+			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
+			// TODO: Fix simplify methods.
+			numbers->at(i) = result;
+			numbers->erase(numbers->begin() + i + 1);
+			operators->erase(operators->begin() + i);
+		} else if (operators->at(i) == '/') {
+			Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
+			// TODO: Fix simplify methods.
+			numbers->at(i) = result;
+			numbers->erase(numbers->begin() + i + 1);
+			operators->erase(operators->begin() + i);
+		}
+	}
+
+	for (int i = 0; i < operators->capacity(); i++) {
+		if (operators->at(i) == '+') {
+			Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
+			// TODO: Fix simplify methods.
+			numbers->at(i) = result;
+			numbers->erase(numbers->begin() + i + 1);
+			operators->erase(operators->begin() + i);
+		} else if (operators->at(i) == '-') {
+			Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+			// TODO: Fix simplify methods.
+			numbers->at(i) = result;
+			numbers->erase(numbers->begin() + i + 1);
+			operators->erase(operators->begin() + i);
+		}
+	}
+
+	if (operators->capacity() > 0) {
+		Number * placeholder = new Placeholder(*this->numbers, *this->operators);
+		return *placeholder;
+	} else {
+		return *numbers->at(0);
 	}
 }
 
-string Calculator::Calculate(string equationSegment) {
-	for (int i = 0; i < equationSegment.length(); i++) {
-		string segmentPart = equationSegment;
-		if (equationSegment[i] == '*') {
-			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
-			if (numType == 0) {
-				// TODO: Create integer type and add to numbers list.
-				Number * integer = new Integer(atoi(segmentPart.substr(0, i - 1).c_str()));
-				numbers->push_back(integer);
-			} else if (numType == 1) {
+Number& Calculator::Calculate(string equationSegment) {
+	int numType = CheckNumberType(equationSegment);
 
-			} else if (numType == 2) {
-				// TODO: Create log type and add to numbers list.
-			} else if (numType == 3) {
-				// TODO: Create root type and add to numbers list.
+	if (numType == 5) {
+		std::vector<Number*> * localNumbers = new vector<Number*>();
+		std::vector<char> * localOperators = new vector<char>();
+
+		int indexOfLastOp = -1;
+		for (int i = 0; i < equationSegment.length(); i++) {
+			string segment = equationSegment;
+
+			if (i + 1 == equationSegment.length()) {
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, segment.length() - 1));
+				localNumbers->push_back(lhs);
+			} else if (equationSegment[i] == '*') {
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				localNumbers->push_back(lhs);
+				localOperators->push_back('*');
+			} else if (equationSegment[i] == '/') {
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				localNumbers->push_back(lhs);
+				localOperators->push_back('/');
+			} else if (equationSegment[i] == '+') {
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				localNumbers->push_back(lhs);
+				localOperators->push_back('+');
+			} else if (equationSegment[i] == '-') {
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				localNumbers->push_back(lhs);
+				localOperators->push_back('-');
 			}
 
-			operators->push_back('*');
-		} else if (equationSegment[i] == '/') {
-			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
-			if (numType == 0) {
-				// TODO: Create integer type and add to numbers list.
-			} else if (numType == 1) {
-				// TODO: Create exponent type and add to numbers list.
-			} else if (numType == 2) {
-				// TODO: Create log type and add to numbers list.
-			} else if (numType == 3) {
-				// TODO: Create root type and add to numbers list.
-			}
-
-			operators->push_back('/');
+			indexOfLastOp = i;
 		}
-	}
 
-	for (int i = 0; i < equationSegment.length(); i++) {
-		string segmentPart = equationSegment;
-		if (equationSegment[i] == '+') {
-			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
-			if (numType == 0) {
-				// TODO: Create integer type and add to numbers list.
-			} else if (numType == 1) {
-				// TODO: Create exponent type and add to numbers list.
-			} else if (numType == 2) {
-				// TODO: Create log type and add to numbers list.
-			} else if (numType == 3) {
-				// TODO: Create root type and add to numbers list.
+		Number * placeholder = new Placeholder(*localNumbers, *localOperators);
+		return *placeholder;
+	} else {
+		if (numType == 0) {
+			// TODO: Create integer type and add to numbers list.
+			Number * integer = new Integer(atoi(equationSegment.c_str()));
+			return *integer;
+		} else if (numType == 1) {
+			int indexOfCarrot = 0;
+			for (int i = 0; i < equationSegment.length(); i++) {
+				if (equationSegment[i] == '^') {
+					indexOfCarrot = i;
+				}
 			}
+			std::string beforeCarrot = equationSegment;
+			std::string afterCarrot = equationSegment;
+			beforeCarrot.substr(0, indexOfCarrot);
+			afterCarrot.substr(indexOfCarrot, equationSegment.length() - indexOfCarrot);
 
-			operators->push_back('+');
-		} else if (equationSegment[i] == '-') {
-			int numType = CheckNumberType(segmentPart.substr(0, i - 1));
-			if (numType == 0) {
-				// TODO: Create integer type and add to numbers list.
-			} else if (numType == 1) {
-				// TODO: Create exponent type and add to numbers list.
-			} else if (numType == 2) {
-				// TODO: Create log type and add to numbers list.
-			} else if (numType == 3) {
-				// TODO: Create root type and add to numbers list.
+			Number * exponent = new Exponent(Calculate(beforeCarrot), Calculate(afterCarrot));
+			return *exponent;
+		} else if (numType == 2) {
+			int indexOfColon = 0;
+			for (int i = 0; i < equationSegment.length(); i++) {
+				if (equationSegment[i] == ':') {
+					indexOfColon = i;
+				}
 			}
+			std::string base = equationSegment;
+			std::string argument = equationSegment;
+			base.substr(4, indexOfColon);
+			argument.substr(indexOfColon + 1, equationSegment.length() - indexOfColon);
 
-			operators->push_back('-');
+			Number * log = new Log(Calculate(base), Calculate(argument));
+			return *log;
+		} else if (numType == 3 || numType == 4) {
+			if (numType == 3) {
+				int indexOfRT = equationSegment.find("rt:");
+				if (indexOfRT > 0) {
+					std::string base = equationSegment;
+					std::string argument = equationSegment;
+					base.substr(0, indexOfRT + 1);
+					argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 3);
+					Number * root = new Root(Calculate(base), Calculate(argument));
+					return *root;
+				} else {
+					// TODO: Throw error
+				}
+			} else if (numType == 4) {
+				int indexOfRT = equationSegment.find("sqrt:");
+				if (indexOfRT > 0) {
+					std::string argument = equationSegment;
+					argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 5);
+					Number * integer = new Integer(2);
+					Number * root = new Root(*integer, Calculate(argument));
+					return *root;
+				} else {
+					// TODO: Throw error
+				}
+			}
 		}
 	}
 }
 
 int Calculator::CheckNumberType(string number) {
+	int indexOfColon = 0;
+	int indexOfCarrot = 0;
 
+	if (IsPlaceholder(number)) return 5;
+
+	for (int i = 0; i < number.length(); i++) {
+		if (number[i] == ':') {
+			indexOfColon = i;
+		} else if (number[i] == '^') {
+			indexOfCarrot = i;
+		}
+	}
+
+	if (indexOfColon > 0 && (indexOfColon < indexOfCarrot || indexOfCarrot == 0 || indexOfCarrot == -1)) {
+		string priorColon = number;
+		priorColon.substr(indexOfColon);
+
+		int rtPosition = number.find("rt:");
+		int logPosition = number.find("log_");
+
+		if (rtPosition > 0 && (rtPosition < logPosition || logPosition == 0 || logPosition == -1)) {
+			int sqrtPosition = number.find("sqrt:");
+
+			if (sqrtPosition > 0 && sqrtPosition < rtPosition) {
+				return 4;
+			}
+
+			return 3;
+		} else if (logPosition > 0 && (logPosition < rtPosition || rtPosition == 0 || rtPosition == -1)) {
+			return 2;
+		}
+
+	} else if (indexOfCarrot > 0 && (indexOfCarrot < indexOfColon || indexOfColon == 0 || indexOfColon == -1)) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
-Number& Calculator::CreateObject(string object) {
+bool Calculator::IsPlaceholder(string number) {
+	int openParanthases = 0;
+	int closeParanthases = 0;
+	bool isPlaceholder = false;
 
+	if (number[0] == '(' && number[number.length() - 1] == ')') {
+		number.substr(1, number.length() - 2);
+	}
+
+	for (int i = 0; i < number.length(); i++) {
+		if (number[i] == '(') {
+			openParanthases++;
+		}
+
+		if (number[i] == ')') {
+			closeParanthases++;
+		}
+
+		if (openParanthases == closeParanthases && (number[i] == '*' || number[i] == '/' || number[i] == '+' || number[i] == '-')) {
+			isPlaceholder = true;
+			i = number.length();
+		}
+	}
+
+	return isPlaceholder;
 }

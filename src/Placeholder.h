@@ -29,7 +29,7 @@ public:
 	Number& operator/(Number& rhs);
 	bool operator==(Number& rhs);
 	std::string toString();
-	std::vector<std::pair<Number*, char> > simplify();
+	Number& simplify();
 
 	std::vector<Number*>& getNumbers();
 	std::vector<char>& getOperators();
