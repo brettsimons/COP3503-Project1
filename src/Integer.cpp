@@ -132,6 +132,11 @@ Number& Integer::operator/(Number& rhs) {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs);
+
+			if (placeholder->getOperators().capacity() == 1 && placeholder->getOperators().at(0) == '/' && this->intContainer == 1) {
+				return *placeholder->getNumbers().at(1) / *placeholder->getNumbers().at(0);
+			}
+
 			bool canSimplify = true;
 			for (int i = 0; i < placeholder->getOperators().capacity(); i++) {
 				if (placeholder->getOperators()[i] == '+' || placeholder->getOperators()[i] == '-') {

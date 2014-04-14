@@ -31,7 +31,7 @@ Number& Root::simplify(){
 std::string Root::toString() {
 	if (typeid(this->root) == typeid(Integer)) {
 		Integer * intRoot = dynamic_cast<Integer*>(this->root);
-		if (intRoot->intContainer == 2) {
+		if (intRoot->getInt() == 2) {
 			return "sqrt:(" + this->base->toString() + ")";
 		}
 	}
