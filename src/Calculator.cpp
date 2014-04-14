@@ -49,33 +49,43 @@ string Calculator::SimplifyExpression(string equation) {
 			if (isEnd) {
 				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length() - 1));
 				numbers->push_back(lhs);
+
+				indexOfLastOp = i;
 			} else {
 				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				numbers->push_back(lhs);
 				operators->push_back(nextOp);
+
+				indexOfLastOp = i;
 			}
 		} else if (equation[i] == '*') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 			numbers->push_back(lhs);
 			operators->push_back('*');
+
+			indexOfLastOp = i;
 		} else if (equation[i] == '/') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 			numbers->push_back(lhs);
 			operators->push_back('/');
+
+			indexOfLastOp = i;
 		} else if (equation[i] == '+') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 			numbers->push_back(lhs);
 			operators->push_back('+');
+
+			indexOfLastOp = i;
 		} else if (equation[i] == '-') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 			numbers->push_back(lhs);
 			operators->push_back('-');
-		}
 
-		indexOfLastOp = i;
+			indexOfLastOp = i;
+		}
 	}
 
-	Number * result = &PerformCalculations();
+	Number * result = &(PerformCalculations());
 	string stringResult = result->toString();
 	delete result;
 	return stringResult;

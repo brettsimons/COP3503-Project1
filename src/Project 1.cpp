@@ -27,7 +27,7 @@ int main() {
 		if (option == 1) {
 			quitNewExpression = false;
 			while (!quitNewExpression) {
-				string innerOption = 0;
+				string innerOption = "";
 				cout << "Please enter an equation to simplify or enter Q to quit:" << endl;
 				cin >> innerOption;
 
