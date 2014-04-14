@@ -10,6 +10,7 @@
 
 #include "Number.h"
 #include <string>
+#include <cmath>
 #include "Placeholder.h"
 #include "Integer.h"
 #include "Log.h"

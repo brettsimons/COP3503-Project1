@@ -25,27 +25,168 @@ Number& Exponent::getExponent() {
 }
 
 Number& Exponent::operator+(Number& rhs) {
+	if (Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs)) {
+		if((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
+            delete rhsCast;
+            Number * integer = new Integer(2);
+            std::vector<Number*> numbers;
+            std::vector<char> operators;
+            numbers.push_back(this);
+            numbers.push_back(integer);
+            operators.push_back('+');
+            Number * result = new Placeholder(numbers, operators);
+            return *result;
+		}
+	}
+	else {
+        delete rhsCast;
 
+        if (typeid(rhs) == typeid(Placeholder)) {
+            return rhs + *this;
+        }
+
+        else {
+            std::vector<Number*> numbers;
+            std::vector<char> operators;
+            numbers.push_back(this);
+            numbers.push_back(&rhs);
+            operators.push_back('+');
+            Number * placeholder = new Placeholder(numbers, operators);
+            return *placeholder;
+        }
+    }
 }
 
 Number& Exponent::operator-(Number& rhs) {
+	if (Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs)) {
+		if((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
+            delete rhsCast;
+            Number * integer = new Integer(0);
+            std::vector<Number*> numbers;
+            std::vector<char> operators;
+            numbers.push_back(this);
+            numbers.push_back(integer);
+            operators.push_back('-');
+            Number * result = new Placeholder(numbers, operators);
+            return *result;
+		}
+	}
+	else {
+        delete rhsCast;
 
+        if (typeid(rhs) == typeid(Placeholder)) {
+            return rhs + *this;
+        }
+
+        else {
+            std::vector<Number*> numbers;
+            std::vector<char> operators;
+            numbers.push_back(this);
+            numbers.push_back(&rhs);
+            operators.push_back('-');
+            Number * placeholder = new Placeholder(numbers, operators);
+            return *placeholder;
+        }
+    }
 }
 
 Number& Exponent::operator*(Number& rhs) {
+	if(typeid(rhs) == typeid(Exponent)) {
+		Exponent * rhsCastExp = dynamic_cast<Exponent*>(&rhs);
 
+		if(rhsCastExp->getBase() == *this->base){
+			if(typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
+				std::vector<Number*> numbers;
+				std::vector<char> operators;
+				numbers.push_back(this->exponent);
+				numbers.push_back(&rhsCastExp->getExponent());
+				operators.push_back('+');
+				Number * placeholder = new Placeholder(numbers, operators);
+				Number * expon = new Exponent(*base, *placeholder);
+				return * expon;
+			}
+			else{
+				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
+				delete rhsCastExp;
+				Number * expon = new Exponent(*base, *times);
+				return * expon;
+			}
+		}
+	}
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs * *this;
+		}
+
+		else {
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(&rhs);
+			operators.push_back('*');
+			Number * placeholder = new Placeholder(numbers, operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Exponent::operator/(Number& rhs) {
+    if(typeid(rhs) == typeid(Exponent)) {
+    	Exponent * rhsCastExp = dynamic_cast<Exponent*>(&rhs);
 
+        if(rhsCastExp->getBase() == *this->base){
+            if(typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
+                std::vector<Number*> numbers;
+                std::vector<char> operators;
+                numbers.push_back(this->exponent);
+                numbers.push_back(&rhsCastExp->getExponent());
+                operators.push_back('-');
+                Number * placeholder = new Placeholder(numbers, operators);
+                Number * expon = new Exponent(*base, *placeholder);
+                return * expon;
+            }
+            else{
+                Number * times = &(rhsCastExp->getExponent() + *this->exponent);
+                delete rhsCastExp;
+                Number * expon = new Exponent(*base, *times);
+                return * expon;
+            }
+        }
+            Number * times = &(rhsCastExp->getExponent() - *this->exponent);
+            delete rhsCastExp;
+            Number * expon = new Exponent(*base, *times);
+            return * expon;
+           }
+        else {
+            if (typeid(rhs) == typeid(Placeholder)) {
+                return rhs / *this;
+                  }
+
+                else {
+                    std::vector<Number*> numbers;
+                    std::vector<char> operators;
+                    numbers.push_back(this);
+                    numbers.push_back(&rhs);
+                    operators.push_back('/');
+                    Number * placeholder = new Placeholder(numbers, operators);
+                    return *placeholder;
+                }
+        }
 }
 
 std::string Exponent::toString() {
-
+	return this->base->toString() + "^" + this->exponent->toString();
 }
 
 Number& Exponent::simplify() {
-
+    if ((typeid(base) == typeid(Integer)) &&  (typeid(exponent) == typeid(Integer))) {
+    	Integer * baseCast = dynamic_cast<Integer*>(base);
+    	Integer * exponentCast = dynamic_cast<Integer*>(exponent);
+        int powr = pow(baseCast->getInt(), exponentCast->getInt());
+        Number *num = new Integer(powr);
+        return *num;
+    }
+    return *this;
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to

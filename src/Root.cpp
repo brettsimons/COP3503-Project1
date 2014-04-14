@@ -16,36 +16,112 @@ Root::~Root() {
 	// TODO Auto-generated destructor stub
 }
 
-Number& Root::operator+(Number& rhs) {
-
+Number& Root::getBase() {
+	return *this->base;
 }
 
-Number& Root::operator-(Number& rhs) {
-
+Number& Root::getRoot() {
+	return *this->root;
 }
 
-Number& Root::operator*(Number& rhs) {
-
-}
-
-Number& Root::operator/(Number& rhs) {
+Number& Root::simplify(){
 
 }
 
 std::string Root::toString() {
+	if (typeid(this->root) == typeid(Integer)) {
+		Integer * intRoot = dynamic_cast<Integer*>(this->root);
+		if (intRoot->intContainer == 2) {
+			return "sqrt:(" + this->base->toString() + ")";
+		}
+	}
 
+	return this->root->toString() + "rt:(" + this->base->toString() + ")";
 }
 
-Number& Root::simplify() {
+Number& Root::operator+(Number& rhs) {
+	if (Root * rhsCast = dynamic_cast<Root*>(&rhs)) {
+		if ((rhsCast->getBase() == *this->base) && (rhsCast->getRoot() == *this->root)) {
+			delete rhsCast;
+			Number * integer = new Integer(2);
+			std::vector<Number*> numbers;
+			std::vector<char> operators;
+			numbers.push_back(this);
+			numbers.push_back(integer);
+			operators.push_back('*');
+			Number * result = new Placeholder(numbers, operators);
+			return *result;
+		}
 
+		delete rhsCast;
+	}
+	std::vector<Number*> numbers;
+	std::vector<char> operators;
+	numbers.push_back(this);
+	numbers.push_back(&rhs);
+	operators.push_back('+');
+	Number * result = new Placeholder(numbers, operators);
+	return *result;
 }
 
-Number& Root::getBase() {
+Number& Root::operator-(Number& rhs) {
+	if (Root * root = dynamic_cast<Root*>(&rhs)) {
+		if ((root->getBase() == *this->base) && (root->getRoot() == *this->root)) {
+			delete root;
+			Number * integer = new Integer(0);
+			return *integer;
+		}
 
+		delete root;
+	}
+	std::vector<Number*> numbers;
+	std::vector<char> operators;
+	numbers.push_back(this);
+	numbers.push_back(&rhs);
+	operators.push_back('-');
+	Number * result = new Placeholder(numbers, operators);
+	return *result;
 }
 
-Number& Root::getRoot() {
+Number& Root::operator*(Number& rhs) {
+	if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		if (rhsCast->getRoot() == *this->root) {
+				Number * innards = &(rhsCast->getBase() * *this->base);
+				Root * answer = new Root(*this, *innards);
+				delete rhsCast;
+				return *answer;
+		}
+		delete rhsCast;
+	}
+	std::vector<Number*> numbers;
+	std::vector<char> operators;
+	numbers.push_back(this);
+	numbers.push_back(&rhs);
+	operators.push_back('*');
+	Number * result = new Placeholder(numbers, operators);
+	return *result;
+}
 
+Number& Root::operator/(Number& rhs) {
+	if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		if (rhsCast->getRoot() == *this->root) {
+				Number * innards = &(*this->base / rhsCast->getBase());
+				Root * answer = new Root(*this, *innards);
+				delete rhsCast;
+				return *answer;
+		}
+		delete rhsCast;
+	}
+
+	std::vector<Number*> numbers;
+	std::vector<char> operators;
+	numbers.push_back(this);
+	numbers.push_back(&rhs);
+	operators.push_back('/');
+	Number * result = new Placeholder(numbers, operators);
+	return *result;
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to

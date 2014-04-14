@@ -513,13 +513,12 @@ Number& Placeholder::operator/(Number& rhs) {
 
 		return (*this / *gcdInteger);
 	} else if (typeid(rhs) == typeid(Root)) {
-		// find largest common root if available and divide. Then get rid of all roots in denominator.
-	} else if (typeid(rhs) == typeid(Placeholder)) {
-		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
+		Number * numerator = &(rhs * *this);
 
-		for (int i = 0; i < rhsCast->getOperators().capacity(); i++) {
-			//if (rhsCast->getOperators()[i] == '/' && )
-		}
+		return (*numerator / *denominator);
+	} else if (typeid(rhs) == typeid(Placeholder)) {
 		Integer * one = new Integer(1);
 		Number * result = &(*one / rhs);
 		return *result;
@@ -527,21 +526,12 @@ Number& Placeholder::operator/(Number& rhs) {
 }
 
 std::string Placeholder::toString() {
+	std::string toReturn = "";
 	for (int i = 0; i < this->numbers->capacity(); i++) {
-		if (typeid(this->numbers->at(i)) == typeid(Integer)) {
-
-		} else if (typeid(this->numbers->at(i)) == typeid(Exponent)) {
-
-		} else if (typeid(this->numbers->at(i)) == typeid(Log)) {
-
-		} else if (typeid(this->numbers->at(i)) == typeid(Root)) {
-
-		} else if (typeid(this->numbers->at(i)) == typeid(Variable)) {
-
-		} else if (typeid(this->numbers->at(i)) == typeid(Placeholder)) {
-			this->numbers->at(i)->toString();
-		}
+		toReturn += this->numbers->at(i)->toString();
 	}
+
+	return toReturn;
 }
 
 Number& Placeholder::simplify() {
