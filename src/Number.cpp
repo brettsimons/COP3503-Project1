@@ -32,3 +32,37 @@ int Number::gcd(int num1, int num2) {
 
 	return gcd;
 }
+
+int Number::gcd(std::vector<int>& numList) {
+	int num1 = 0;
+
+	for (int i = 0; i < numList.capacity(); i++) {
+		if (i == 0) {
+			num1 = numList[i];
+		} else if (numList[i] < num1) {
+			num1 = numList[i];
+		}
+	}
+
+	int gcd = 1;
+
+	for (int i = 2; i < num1; i++) {
+		bool isGCD = false;
+
+		for (int x = 0; x < numList.capacity(); x++) {
+			if (numList[x] % i == 0) {
+				isGCD = true;
+			} else {
+				isGCD = false;
+				x = numList.capacity();
+			}
+		}
+
+		if (isGCD) {
+			gcd = i;
+		}
+	}
+
+	return gcd;
+}
+

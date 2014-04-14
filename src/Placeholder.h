@@ -31,6 +31,8 @@ public:
 	std::string toString();
 	Number& simplify();
 
+	template <class T1>
+	std::vector<T1> getInnerGCD(Placeholder& innerEquation);
 	std::vector<Number*>& getNumbers();
 	std::vector<char>& getOperators();
 private:

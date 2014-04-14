@@ -474,6 +474,55 @@ Number& Placeholder::operator*(Number& rhs) {
 
 Number& Placeholder::operator/(Number& rhs) {
 	// TODO: sepcifically account for 1 / some fraction.
+	if (typeid(rhs) == typeid(Integer)) {
+		Integer * integer = dynamic_cast<Integer*>(&rhs);
+
+		if (integer->getInt() == 1) {
+			return *this;
+		} else if (integer->getInt() == 0) {
+			// TODO: throw error.
+		}
+
+		std::vector<int> intArray;
+		bool hasInt = false;
+
+		for (int i = 0; i < this->operators->capacity(); i++) {
+			if (typeid(this->numbers->at(i)) == typeid(Integer)) {
+				Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
+				intArray.push_back(tempInt->getInt());
+			}
+
+			if (i == this->operators->capacity() - 1) {
+				intArray.push_back(integer->getInt());
+			}
+
+			if (this->operators->at(i) == '/') {
+				this->numbers->at(i + 1) = &(*this->numbers->at(i + 1) * rhs);
+
+				for (int x = 0; x < this->numbers->capacity(); x++) {
+					if (typeid(this->numbers->at(i)) == typeid(Integer)) {
+						Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
+						intArray.push_back(tempInt->getInt());
+					}
+				}
+			}
+		}
+
+		int gcdResult = gcd(intArray);
+		Integer * gcdInteger = new Integer(gcdResult);
+
+		return (*this / *gcdInteger);
+	} else if (typeid(rhs) == typeid(Exponent)) {
+		// find largest common exponent and divide (if available).
+	} else if (typeid(rhs) == typeid(Root)) {
+		// find largest common root if available and divide. Then get rid of all roots in denominator.
+	} else if (typeid(rhs) == typeid(Variable)) {
+		// find largest common variable and divide.
+	} else if (typeid(rhs) == typeid(Placeholder)) {
+		Integer * one = new Integer(1);
+		Number * result = &(*one / rhs);
+		return *result;
+	}
 }
 
 std::string Placeholder::toString() {
