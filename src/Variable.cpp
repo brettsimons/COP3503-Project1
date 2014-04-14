@@ -165,7 +165,7 @@ Number& Variable::operator/(Number& rhs) {
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to
 // being inherited from the Number class.
 bool Variable::operator==(Number& rhs) {
-	if (typeid(this) == typeid(rhs)) {
+	if (typeid(*this) == typeid(rhs)) {
 		if (typeid(rhs) == typeid(Exponent)) {
 			Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
 			Exponent * lhsCast = dynamic_cast<Exponent*>(this);
@@ -186,11 +186,11 @@ bool Variable::operator==(Number& rhs) {
 			Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
 			Placeholder * lhsCast = dynamic_cast<Placeholder*>(this);
 
-			if (rhsCast->getNumbers().capacity() == lhsCast->getNumbers().capacity()) {
-				for (int i = 0; i < lhsCast->getNumbers().capacity(); i++) {
+			if (rhsCast->getNumbers().size() == lhsCast->getNumbers().size()) {
+				for (int i = 0; i < lhsCast->getNumbers().size(); i++) {
 					bool matched = false;
 
-					for (int y = 0; y < rhsCast->getNumbers().capacity(); y++) {
+					for (int y = 0; y < rhsCast->getNumbers().size(); y++) {
 						if (lhsCast[i] == rhsCast[y]) {
 							matched = true;
 						}
@@ -201,10 +201,10 @@ bool Variable::operator==(Number& rhs) {
 					}
 				}
 
-				for (int i = 0; i < lhsCast->getOperators().capacity(); i++) {
+				for (int i = 0; i < lhsCast->getOperators().size(); i++) {
 					bool matched = false;
 
-					for (int y = 0; y < rhsCast->getOperators().capacity(); y++) {
+					for (int y = 0; y < rhsCast->getOperators().size(); y++) {
 						if (lhsCast->getOperators()[i] == rhsCast->getOperators()[y]) {
 							if (lhsCast->getOperators()[i] == '-' || lhsCast->getOperators()[i] == '/') {
 								if (lhsCast->getNumbers()[i] == rhsCast->getNumbers()[y] && lhsCast->getNumbers()[i+1] == rhsCast->getNumbers()[y+1]) {

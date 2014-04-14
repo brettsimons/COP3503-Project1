@@ -43,7 +43,7 @@ int main() {
 						while((start_pos = innerOption.find("ans(", start_pos)) != std::string::npos) {
 							string answerNum = innerOption;
 							location = innerOption.find(")", start_pos);
-							answerNum.substr(start_pos + 4, location - start_pos + 4);
+							answerNum = answerNum.substr(start_pos + 4, location - start_pos + 4);
 							int answer = atoi(answerNum.c_str());
 							innerOption.replace(start_pos, 4, previousAnswers.at(answer));
 							start_pos += previousAnswers.at(answer).length();
@@ -53,7 +53,7 @@ int main() {
 					Calculator * calc = new Calculator();
 					previousExpressions.push_back(innerOption);
 					previousAnswers.push_back(calc->SimplifyExpression(innerOption));
-					cout << "\n" << previousAnswers.at(previousAnswers.capacity())  << "\n" << endl;
+					cout << "\nAnswer: " << previousAnswers.at(previousAnswers.size() - 1)  << "\n" << endl;
 				}
 			}
 		} else if (option == 2) {
@@ -61,8 +61,8 @@ int main() {
 			cout << "\nPress Enter to continue...";
 			cin;
 		} else if (option == 3) {
-			for (int i = previousExpressions.capacity(); i > 0; i--) {
-				cout << "Expression (" << previousExpressions.capacity() - i << "): " << previousExpressions.at(i) << "\n" << endl;
+			for (int i = previousExpressions.size() - 1; i >= 0; i--) {
+				cout << "Expression (" << previousExpressions.size() - i << "): " << previousExpressions.at(i) << "\n" << endl;
 				cout << "\nPress Enter to continue...";
 				cin;
 			}

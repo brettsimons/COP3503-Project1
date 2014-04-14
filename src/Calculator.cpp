@@ -6,6 +6,7 @@
  */
 
 #include "Calculator.h"
+#include <iostream>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ string Calculator::SimplifyExpression(string equation) {
 		string equationSegment = equation;
 
 		if (i + 1 == equation.length()) {
-			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length() - 1));
+			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equationSegment.length()));
 			numbers->push_back(lhs);
 		} else if (equation[i] == '(') {
 			bool foundClose = false;
@@ -86,13 +87,18 @@ string Calculator::SimplifyExpression(string equation) {
 	}
 
 	Number * result = &(PerformCalculations());
-	string stringResult = result->toString();
+	string stringResult = "";
+	try {
+	stringResult = result->toString();
+	} catch (exception e) {
+		cout << e.what();
+	}
 	delete result;
 	return stringResult;
 }
 
 Number& Calculator::PerformCalculations() {
-	for (int i = 0; i < operators->capacity(); i++) {
+	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '*') {
 			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
 			// TODO: Fix simplify methods.
@@ -108,7 +114,7 @@ Number& Calculator::PerformCalculations() {
 		}
 	}
 
-	for (int i = 0; i < operators->capacity(); i++) {
+	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '+') {
 			Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
 			// TODO: Fix simplify methods.
@@ -124,10 +130,11 @@ Number& Calculator::PerformCalculations() {
 		}
 	}
 
-	if (operators->capacity() > 0) {
+	if (!operators->empty()) {
 		Number * placeholder = new Placeholder(*this->numbers, *this->operators);
 		return *placeholder;
 	} else {
+		numbers->at(0) = &(numbers->at(0)->simplify());
 		return *numbers->at(0);
 	}
 }
@@ -183,8 +190,8 @@ Number& Calculator::Calculate(string equationSegment) {
 			}
 			std::string beforeCarrot = equationSegment;
 			std::string afterCarrot = equationSegment;
-			beforeCarrot.substr(0, indexOfCarrot);
-			afterCarrot.substr(indexOfCarrot, equationSegment.length() - indexOfCarrot);
+			beforeCarrot = beforeCarrot.substr(0, indexOfCarrot);
+			afterCarrot = afterCarrot.substr(indexOfCarrot, equationSegment.length() - indexOfCarrot - 1);
 
 			Number * exponent = new Exponent(Calculate(beforeCarrot), Calculate(afterCarrot));
 			return *exponent;
@@ -197,8 +204,8 @@ Number& Calculator::Calculate(string equationSegment) {
 			}
 			std::string base = equationSegment;
 			std::string argument = equationSegment;
-			base.substr(4, indexOfColon);
-			argument.substr(indexOfColon + 1, equationSegment.length() - indexOfColon);
+			base = base.substr(4, indexOfColon - 4);
+			argument = argument.substr(indexOfColon + 1, equationSegment.length() - indexOfColon - 1);
 
 			Number * log = new Log(Calculate(base), Calculate(argument));
 			return *log;
@@ -208,8 +215,8 @@ Number& Calculator::Calculate(string equationSegment) {
 				if (indexOfRT > 0) {
 					std::string base = equationSegment;
 					std::string argument = equationSegment;
-					base.substr(0, indexOfRT + 1);
-					argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 3);
+					base = base.substr(0, indexOfRT + 1);
+					argument = argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 4);
 					Number * root = new Root(Calculate(base), Calculate(argument));
 					return *root;
 				} else {
@@ -217,9 +224,9 @@ Number& Calculator::Calculate(string equationSegment) {
 				}
 			} else if (numType == 4) {
 				int indexOfRT = equationSegment.find("sqrt:");
-				if (indexOfRT > 0) {
+				if (indexOfRT >= 0) {
 					std::string argument = equationSegment;
-					argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 5);
+					argument = argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 6);
 					Number * integer = new Integer(2);
 					Number * root = new Root(*integer, Calculate(argument));
 					return *root;
@@ -247,7 +254,7 @@ int Calculator::CheckNumberType(string number) {
 
 	if (indexOfColon > 0 && (indexOfColon < indexOfCarrot || indexOfCarrot == 0 || indexOfCarrot == -1)) {
 		string priorColon = number;
-		priorColon.substr(indexOfColon);
+		priorColon = priorColon.substr(indexOfColon);
 
 		int rtPosition = number.find("rt:");
 		int logPosition = number.find("log_");
@@ -255,12 +262,12 @@ int Calculator::CheckNumberType(string number) {
 		if (rtPosition > 0 && (rtPosition < logPosition || logPosition == 0 || logPosition == -1)) {
 			int sqrtPosition = number.find("sqrt:");
 
-			if (sqrtPosition > 0 && sqrtPosition < rtPosition) {
+			if (sqrtPosition >= 0 && sqrtPosition < rtPosition) {
 				return 4;
 			}
 
 			return 3;
-		} else if (logPosition > 0 && (logPosition < rtPosition || rtPosition == 0 || rtPosition == -1)) {
+		} else if (logPosition >= 0 && (logPosition < rtPosition || rtPosition == 0 || rtPosition == -1)) {
 			return 2;
 		}
 
@@ -277,7 +284,7 @@ bool Calculator::IsPlaceholder(string number) {
 	bool isPlaceholder = false;
 
 	if (number[0] == '(' && number[number.length() - 1] == ')') {
-		number.substr(1, number.length() - 2);
+		number = number.substr(1, number.length() - 2);
 	}
 
 	for (int i = 0; i < number.length(); i++) {

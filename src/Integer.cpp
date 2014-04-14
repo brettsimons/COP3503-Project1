@@ -133,23 +133,23 @@ Number& Integer::operator/(Number& rhs) {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs);
 
-			if (placeholder->getOperators().capacity() == 1 && placeholder->getOperators().at(0) == '/' && this->intContainer == 1) {
+			if (placeholder->getOperators().size() == 1 && placeholder->getOperators().at(0) == '/' && this->intContainer == 1) {
 				return *placeholder->getNumbers().at(1) / *placeholder->getNumbers().at(0);
 			}
 
 			bool canSimplify = true;
-			for (int i = 0; i < placeholder->getOperators().capacity(); i++) {
+			for (int i = 0; i < placeholder->getOperators().size(); i++) {
 				if (placeholder->getOperators()[i] == '+' || placeholder->getOperators()[i] == '-') {
 					canSimplify = false;
 				}
 			}
 
 			if (canSimplify) {
-				for (int i = 0; i < placeholder->getNumbers().capacity(); i++) {
-					if (typeid(placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '*') || (i == 0 && placeholder->getOperators()[0] == '*'))) {
+				for (int i = 0; i < placeholder->getNumbers().size(); i++) {
+					if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '*') || (i == 0 && placeholder->getOperators()[0] == '*'))) {
 						Number * intAnswer = &(*this / *placeholder->getNumbers()[i]);
 
-						if (typeid(intAnswer) == typeid(Integer)) {
+						if (typeid(*intAnswer) == typeid(Integer)) {
 							placeholder->getOperators().erase(placeholder->getOperators().begin() + (i-1));
 							placeholder->getNumbers().erase(placeholder->getNumbers().begin() + i);
 							placeholder->getNumbers().insert(placeholder->getNumbers().begin(), intAnswer);
@@ -165,7 +165,7 @@ Number& Integer::operator/(Number& rhs) {
 						}
 					}
 
-					else if (typeid(placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '/') || (i == 0 && placeholder->getOperators()[0] == '/'))) {
+					else if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '/') || (i == 0 && placeholder->getOperators()[0] == '/'))) {
 						Number * answer = &(*this * *placeholder->getNumbers()[i]);
 						return *answer;
 					}
@@ -188,7 +188,7 @@ Number& Integer::operator/(Number& rhs) {
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to
 // being inherited from the Number class.
 bool Integer::operator==(Number& rhs) {
-	if (typeid(this) == typeid(rhs)) {
+	if (typeid(*this) == typeid(rhs)) {
 		if (typeid(rhs) == typeid(Exponent)) {
 			Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
 			Exponent * lhsCast = dynamic_cast<Exponent*>(this);
@@ -209,11 +209,11 @@ bool Integer::operator==(Number& rhs) {
 			Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
 			Placeholder * lhsCast = dynamic_cast<Placeholder*>(this);
 
-			if (rhsCast->getNumbers().capacity() == lhsCast->getNumbers().capacity()) {
-				for (int i = 0; i < lhsCast->getNumbers().capacity(); i++) {
+			if (rhsCast->getNumbers().size() == lhsCast->getNumbers().size()) {
+				for (int i = 0; i < lhsCast->getNumbers().size(); i++) {
 					bool matched = false;
 
-					for (int y = 0; y < rhsCast->getNumbers().capacity(); y++) {
+					for (int y = 0; y < rhsCast->getNumbers().size(); y++) {
 						if (lhsCast[i] == rhsCast[y]) {
 							matched = true;
 						}
@@ -224,10 +224,10 @@ bool Integer::operator==(Number& rhs) {
 					}
 				}
 
-				for (int i = 0; i < lhsCast->getOperators().capacity(); i++) {
+				for (int i = 0; i < lhsCast->getOperators().size(); i++) {
 					bool matched = false;
 
-					for (int y = 0; y < rhsCast->getOperators().capacity(); y++) {
+					for (int y = 0; y < rhsCast->getOperators().size(); y++) {
 						if (lhsCast->getOperators()[i] == rhsCast->getOperators()[y]) {
 							if (lhsCast->getOperators()[i] == '-' || lhsCast->getOperators()[i] == '/') {
 								if (lhsCast->getNumbers()[i] == rhsCast->getNumbers()[y] && lhsCast->getNumbers()[i+1] == rhsCast->getNumbers()[y+1]) {
