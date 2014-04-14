@@ -25,7 +25,120 @@ Number& Root::getRoot() {
 }
 
 Number& Root::simplify(){
+	if (typeid(*base) == typeid(Integer) && typeid(*root) == typeid(Integer)) {
+		Integer * baseInt = dynamic_cast<Integer*>(base);
+		Integer * rootInt = dynamic_cast<Integer*>(root);
+		std::vector<int> vec = primeFactors(baseInt->getInt());
 
+		double invRoot = 1/((double)rootInt->getInt());
+
+		if (typeid(pow(baseInt->getInt(), invRoot)) == typeid(int)) {
+			return *(new Integer(pow(baseInt->getInt(), invRoot)));
+		}
+
+		int c2,c3,c5,c7=0;
+		int fin2,fin3,fin5,fin7 = 0;
+
+		for(int i = 0; i < vec.size(); i++) {
+			if(vec[i] == 2) {
+				c2++;
+			}
+			if(vec[i] == 3) {
+				c3++;
+			}
+			if(vec[i] == 5) {
+				c5++;
+			}
+			if(vec[i] == 7) {
+				c7++;
+			}
+		}
+
+		if(c2 > 1) {
+			int n = c2/rootInt->getInt();
+			fin2 = n * 2;
+			if(fin2 == 0){
+				fin2 = 1;
+			}
+		}
+
+		else {
+			fin2 = 1;
+		}
+
+		if(c3 > 1) {
+			int n = c3/rootInt->getInt();
+			fin3 = n * 3;
+			if(fin3 == 0){
+				fin3 = 1;
+			}
+
+		}
+
+		else {
+			fin3 = 1;
+		}
+
+		if(c5 > 1) {
+			int n = c5/rootInt->getInt();
+			fin5 = n * 5;
+			if(fin5 == 0){
+				fin5 = 1;
+			}
+
+		}
+
+		else {
+			fin5 = 1;
+		}
+
+		if(c7 > 1) {
+			int n = c7/rootInt->getInt();
+			fin7 = n * 7;
+			if(fin7 == 0){
+				fin7 = 1;
+			}
+		}
+
+		else {
+			fin7 = 1;
+		}
+
+		int maxFactor = fin2 * fin3 * fin5 * fin7;
+		int baseFin = baseInt->getInt()/pow(maxFactor,rootInt->getInt());
+		return *this;
+	} else if (typeid(*root) == typeid(Placeholder)) {
+		Placeholder * rootPlaceholder = dynamic_cast<Placeholder*>(root);
+		if (typeid(rootPlaceholder->getNumbers().at(0)) == typeid(Integer)) {
+			Integer * negRootInt = dynamic_cast<Integer*>(rootPlaceholder->getNumbers().at(0));
+			Integer * rootInt = dynamic_cast<Integer*>(rootPlaceholder->getNumbers().at(1));
+			if (negRootInt->getInt() == -1) {
+				Placeholder * ph = new Placeholder();
+				Integer * one = new Integer(1);
+
+				ph->getNumbers().push_back(one);
+				ph->getNumbers().push_back(rootInt);
+				ph->getOperators().push_back('/');
+				Exponent * exp = new Exponent(*base, *ph);
+				return *exp;
+			} else {
+				return *this;
+			}
+		} else {
+			return *this;
+		}
+	} else if (typeid(*base) == typeid(Placeholder)) {
+		Placeholder * basePlaceholder = dynamic_cast<Placeholder*>(base);
+		if (typeid(basePlaceholder->getNumbers().at(0)) == typeid(Integer)) {
+			Integer * negBaseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(0));
+			Integer * baseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(1));
+			if (negBaseInt->getInt() == -1) {
+				//TODO: throw exception
+			}
+		}
+	} else {
+		return *this;
+	}
 }
 
 std::string Root::toString() {
@@ -42,7 +155,6 @@ std::string Root::toString() {
 Number& Root::operator+(Number& rhs) {
 	if (Root * rhsCast = dynamic_cast<Root*>(&rhs)) {
 		if ((rhsCast->getBase() == *this->base) && (rhsCast->getRoot() == *this->root)) {
-			delete rhsCast;
 			Number * integer = new Integer(2);
 			std::vector<Number*> numbers;
 			std::vector<char> operators;
@@ -52,8 +164,6 @@ Number& Root::operator+(Number& rhs) {
 			Number * result = new Placeholder(numbers, operators);
 			return *result;
 		}
-
-		delete rhsCast;
 	}
 	std::vector<Number*> numbers;
 	std::vector<char> operators;
@@ -67,12 +177,9 @@ Number& Root::operator+(Number& rhs) {
 Number& Root::operator-(Number& rhs) {
 	if (Root * root = dynamic_cast<Root*>(&rhs)) {
 		if ((root->getBase() == *this->base) && (root->getRoot() == *this->root)) {
-			delete root;
 			Number * integer = new Integer(0);
 			return *integer;
 		}
-
-		delete root;
 	}
 	std::vector<Number*> numbers;
 	std::vector<char> operators;
@@ -89,10 +196,8 @@ Number& Root::operator*(Number& rhs) {
 		if (rhsCast->getRoot() == *this->root) {
 				Number * innards = &(rhsCast->getBase() * *this->base);
 				Root * answer = new Root(*this, *innards);
-				delete rhsCast;
 				return *answer;
 		}
-		delete rhsCast;
 	}
 	std::vector<Number*> numbers;
 	std::vector<char> operators;
@@ -109,10 +214,8 @@ Number& Root::operator/(Number& rhs) {
 		if (rhsCast->getRoot() == *this->root) {
 				Number * innards = &(*this->base / rhsCast->getBase());
 				Root * answer = new Root(*this, *innards);
-				delete rhsCast;
 				return *answer;
 		}
-		delete rhsCast;
 	}
 
 	std::vector<Number*> numbers;

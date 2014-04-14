@@ -24,11 +24,11 @@ Placeholder::~Placeholder() {
 Number& Placeholder::operator+(Number& rhs) {
 	if (typeid(rhs) == typeid(Placeholder)) {
 		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
-		std::vector<Number*> rhsNumberList = rhsCast->getNumbers();
-		std::vector<char> rhsOperatorList = rhsCast->getOperators();
+		std::vector<Number*> * rhsNumberList = &rhsCast->getNumbers();
+		std::vector<char> * rhsOperatorList = &rhsCast->getOperators();
 
-		for (int i = 0; i < rhsNumberList.size(); i++) {
-			Number * addition = &(*this + *rhsNumberList[i]);
+		for (int i = 0; i < rhsNumberList->size(); i++) {
+			Number * addition = &(*this + *rhsNumberList->at(i));
 
 			if (typeid(*addition) == typeid(Placeholder)) {
 				Placeholder * tempPlaceholder = dynamic_cast<Placeholder*>(addition);
@@ -52,8 +52,8 @@ Number& Placeholder::operator+(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) + *toAdd);
 				return *result;
@@ -63,20 +63,15 @@ Number& Placeholder::operator+(Number& rhs) {
 				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('+');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getExponent() == rhsCast->getExponent()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(2));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('+');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -86,8 +81,12 @@ Number& Placeholder::operator+(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (i == 0 && this->operators->size() > 0 && this->operators->at(0) == '/') {
+				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
+				Number * result = &(*this->numbers->at(i) + *toAdd);
+				return *result;
+			} else if (i != 0 && this->operators->size() > 0 && this->operators->at(i - 1) == '/') {
 				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) + *toAdd);
 				return *result;
@@ -99,7 +98,6 @@ Number& Placeholder::operator+(Number& rhs) {
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('+');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -109,7 +107,7 @@ Number& Placeholder::operator+(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
+
 			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) + *toAdd);
@@ -117,23 +115,18 @@ Number& Placeholder::operator+(Number& rhs) {
 			} else if (typeid(*this->numbers->at(i)) == typeid(Log)) {
 				Log * lhsCast = dynamic_cast<Log*>(this->numbers->at(i));
 
-				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
+				if (this->operators->size() > 0 && this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('+');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getArgument() == rhsCast->getArgument()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(2));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('+');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -143,31 +136,26 @@ Number& Placeholder::operator+(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) + *toAdd);
 				return *result;
 			} else if (typeid(*this->numbers->at(i)) == typeid(Root)) {
 				Root * lhsCast = dynamic_cast<Root*>(this->numbers->at(i));
 
-				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
+				if (this->operators->size() > 0 && this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('+');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getRoot() == rhsCast->getRoot()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(2));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('+');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -177,7 +165,7 @@ Number& Placeholder::operator+(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
+
 			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toAdd = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) + *toAdd);
@@ -185,23 +173,18 @@ Number& Placeholder::operator+(Number& rhs) {
 			} else if (typeid(*this->numbers->at(i)) == typeid(Variable)) {
 				Variable * lhsCast = dynamic_cast<Variable*>(this->numbers->at(i));
 
-				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
+				if (this->operators->size() > 0 && this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('+');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getVariable() == rhsCast->getVariable()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(2));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('+');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -212,11 +195,11 @@ Number& Placeholder::operator+(Number& rhs) {
 Number& Placeholder::operator-(Number& rhs) {
 	if (typeid(rhs) == typeid(Placeholder)) {
 		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
-		std::vector<Number*> rhsNumberList = rhsCast->getNumbers();
-		std::vector<char> rhsOperatorList = rhsCast->getOperators();
+		std::vector<Number*> * rhsNumberList = &rhsCast->getNumbers();
+		std::vector<char> * rhsOperatorList = &rhsCast->getOperators();
 
-		for (int i = 0; i < rhsNumberList.size(); i++) {
-			Number * subtraction = &(*this - *rhsNumberList[i]);
+		for (int i = 0; i < rhsNumberList->size(); i++) {
+			Number * subtraction = &(*this - *rhsNumberList->at(i));
 
 			if (typeid(*subtraction) == typeid(Placeholder)) {
 				Placeholder * tempPlaceholder = dynamic_cast<Placeholder*>(subtraction);
@@ -240,31 +223,26 @@ Number& Placeholder::operator-(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) - *toSubtract);
 				return *result;
 			} else if (typeid(*this->numbers->at(i)) == typeid(Exponent)) {
 				Exponent * lhsCast = dynamic_cast<Exponent*>(this->numbers->at(i));
 
-				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
+				if (this->operators->size() > 0 && this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('-');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getExponent() == rhsCast->getExponent()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(0));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('-');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -274,8 +252,8 @@ Number& Placeholder::operator-(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) - *toSubtract);
 				return *result;
@@ -287,7 +265,6 @@ Number& Placeholder::operator-(Number& rhs) {
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('-');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -297,8 +274,8 @@ Number& Placeholder::operator-(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) - *toSubtract);
 				return *result;
@@ -308,20 +285,16 @@ Number& Placeholder::operator-(Number& rhs) {
 				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('-');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getArgument() == rhsCast->getArgument()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(0));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
+
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('-');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -330,9 +303,9 @@ Number& Placeholder::operator-(Number& rhs) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 
 		for (int i = 0; i < this->numbers->size(); i++) {
-			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+			if (this->operators->size() > 0 && i != 0 && this->operators->at(i-1) == '/') {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) - *toSubtract);
 				return *result;
@@ -342,14 +315,10 @@ Number& Placeholder::operator-(Number& rhs) {
 				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('-');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getBase() == rhsCast->getBase() && lhsCast->getRoot() == rhsCast->getRoot()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(0));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
@@ -365,31 +334,26 @@ Number& Placeholder::operator-(Number& rhs) {
 
 		for (int i = 0; i < this->numbers->size(); i++) {
 			if (i != 0 && this->operators->at(i-1) == '/') {
-				break;
-			} else if ((i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
+
+			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
 				Number * result = &(*this->numbers->at(i) - *toSubtract);
 				return *result;
 			} else if (typeid(*this->numbers->at(i)) == typeid(Variable)) {
 				Variable * lhsCast = dynamic_cast<Variable*>(this->numbers->at(i));
 
-				if (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
+				if (this->operators->size() > 0 && this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '*')) {
 					this->numbers->push_back(&rhs);
 					this->operators->push_back('-');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				} else if (lhsCast->getVariable() == rhsCast->getVariable()){
 					this->numbers->insert(this->numbers->begin() + i - 1, new Integer(0));
 					this->operators->insert(this->operators->begin() + i - 2, '*');
-					delete rhsCast;
-					delete lhsCast;
 					return *this;
 				}
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('-');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -399,11 +363,11 @@ Number& Placeholder::operator-(Number& rhs) {
 Number& Placeholder::operator*(Number& rhs) {
 	if (typeid(rhs) == typeid(Placeholder)) {
 		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
-		std::vector<Number*> rhsNumberList = rhsCast->getNumbers();
-		std::vector<char> rhsOperatorList = rhsCast->getOperators();
+		std::vector<Number*> * rhsNumberList = &rhsCast->getNumbers();
+		std::vector<char> * rhsOperatorList = &rhsCast->getOperators();
 
-		for (int i = 0; i < rhsNumberList.size(); i++) {
-			Number * multiplication = &(*this * *rhsNumberList[i]);
+		for (int i = 0; i < rhsNumberList->size(); i++) {
+			Number * multiplication = &(*this * *rhsNumberList->at(i));
 
 			if (typeid(*multiplication) == typeid(Placeholder)) {
 				Placeholder * tempPlaceholder = dynamic_cast<Placeholder*>(multiplication);
@@ -530,28 +494,21 @@ std::string Placeholder::toString() {
 	for (int i = 0; i < this->numbers->size(); i++) {
 		if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
 			Integer * integer = dynamic_cast<Integer*>(this->numbers->at(i));
-			if (integer->getInt() == 1) {
+			if (integer->getInt() == 1 && this->operators->size() > 0 && (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '/'))) {
 				i++;
 			} else if (integer->getInt() == 0) {
-				int lowExtrenum = 0;
+				int lowExtrenum = -1;
 				int highExtrenum = this->operators->size() - 1;
 				for(int x = i; x < this->operators->size(); x++) {
 					if (this->operators->at(x) == '*' || this->operators->at(x) == '/') {
-						highExtrenum = x;
+						highExtrenum = x+1;
 					}
 				}
 
-				for(int x = i; x >= 0; x--) {
-					if (this->operators->at(x) == '*' || this->operators->at(x) == '/') {
-						lowExtrenum = x;
-					}
-				}
-
-				this->numbers->erase(this->numbers->begin() + lowExtrenum, this->numbers->begin() + highExtrenum);
-				this->operators->erase(this->operators->begin() + lowExtrenum, this->operators->begin() + highExtrenum);
+				i = highExtrenum;
 			}
 		}
-		if (i <= this->operators->size()) {
+		if (i < this->operators->size()) {
 			toReturn += this->numbers->at(i)->toString() + this->operators->at(i);
 		} else {
 			toReturn += this->numbers->at(i)->toString();

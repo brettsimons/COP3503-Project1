@@ -10,6 +10,7 @@
 
 #include<vector>
 #include<string>
+#include<cmath>
 
 class Number {
 	public:
@@ -29,6 +30,7 @@ class Number {
 		std::string lcm(T1 denom1, T2 denom2);
 		int gcd(int num1, int num2);
 		int gcd(std::vector<int>& numList);
+		std::vector<int> primeFactors(int n);
 };
 
 

@@ -39,12 +39,12 @@ Number& Integer::operator+(Number& rhs) {
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('+');
-			Number * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('+');
+			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}
@@ -67,12 +67,12 @@ Number& Integer::operator-(Number& rhs) {
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('-');
-			Number * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('-');
+			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}
@@ -93,12 +93,12 @@ Number& Integer::operator*(Number& rhs) {
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('*');
-			Number * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('*');
+			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}
@@ -119,12 +119,12 @@ Number& Integer::operator/(Number& rhs) {
 			Number * intNum = new Integer(numerator);
 			Number * intDenom = new Integer(denominator);
 
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(intNum);
-			numbers.push_back(intDenom);
-			operators.push_back('/');
-			Number * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(intNum);
+			numbers->push_back(intDenom);
+			operators->push_back('/');
+			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	} else {
@@ -174,12 +174,12 @@ Number& Integer::operator/(Number& rhs) {
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('/');
-			Number * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('/');
+			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}

@@ -89,7 +89,7 @@ string Calculator::SimplifyExpression(string equation) {
 	Number * result = &(PerformCalculations());
 	string stringResult = "";
 	try {
-	stringResult = result->toString();
+		stringResult = result->toString();
 	} catch (exception e) {
 		cout << e.what();
 	}
@@ -234,6 +234,30 @@ Number& Calculator::Calculate(string equationSegment) {
 					// TODO: Throw error
 				}
 			}
+		} else if (numType == 6) {
+			for (int i = 0; i < equationSegment.length(); i++) {
+				if (isalpha(equationSegment.at(i))) {
+					if (i + 1 == equationSegment.length() && isalpha(equationSegment.at(i))) {
+						std::string variable = "";
+						variable += equationSegment.at(i);
+						Variable * var = new Variable(variable);
+						return *var;
+					} else if (equationSegment.at(i) == 'p' && equationSegment.at(i+1) == 'i' && (i + 2 == equationSegment.length() || !isalpha(equationSegment.at(i+2)) || equationSegment.at(i+2) != ':' || equationSegment.at(i+2) != '^')) {
+						std::string variable = "";
+						variable += equationSegment.at(i);
+						variable += equationSegment.at(i + 1);
+						Variable * var = new Variable(variable);
+						return *var;
+					} else if (isalpha(equationSegment.at(i)) && (!isalpha(equationSegment.at(i+1)) || equationSegment.at(i+1) != ':' || equationSegment.at(i+1) != '^')) {
+						std::string variable = "";
+						variable += equationSegment.at(i);
+						Variable * var = new Variable(variable);
+						return *var;
+					} else {
+						// TODO: throw error
+					}
+				}
+			}
 		}
 	}
 }
@@ -243,6 +267,17 @@ int Calculator::CheckNumberType(string number) {
 	int indexOfCarrot = 0;
 
 	if (IsPlaceholder(number)) return 5;
+
+	for (int i = 0; i < number.length(); i++) {
+		if (isalpha(number.at(i))) {
+			if (i + 1 == number.length() && isalpha(number.at(i))) {
+				return 6;
+			}
+			else if ((number.at(i) == 'p' && number.at(i+1) == 'i' && (i + 2 == number.length() || !isalpha(number.at(i+2)) || number.at(i+2) != ':' || number.at(i+2) != '^')) || (isalpha(number.at(i)) && (!isalpha(number.at(i+1)) || number.at(i+1) != ':' || number.at(i+1) != '^'))) {
+				return 6;
+			}
+		}
+	}
 
 	for (int i = 0; i < number.length(); i++) {
 		if (number[i] == ':') {

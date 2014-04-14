@@ -31,16 +31,14 @@ Number& Variable::operator+(Number& rhs) {
 			Number * result = new Placeholder(numbers, operators);
 			return *result;
 		}
-
-		delete rhsCast;
 	}
 
-	std::vector<Number*> numbers;
-	std::vector<char> operators;
-	numbers.push_back(this);
-	numbers.push_back(&rhs);
-	operators.push_back('+');
-	Number * result = new Placeholder(numbers, operators);
+	std::vector<Number*> * numbers = new std::vector<Number*>();
+	std::vector<char> * operators = new std::vector<char>();
+	numbers->push_back(this);
+	numbers->push_back(&rhs);
+	operators->push_back('+');
+	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
 }
 
@@ -51,16 +49,14 @@ Number& Variable::operator-(Number& rhs) {
 			Number * integer = new Integer(0);
 			return *integer;
 		}
-
-		delete rhsCast;
 	}
 
-	std::vector<Number*> numbers;
-	std::vector<char> operators;
-	numbers.push_back(this);
-	numbers.push_back(&rhs);
-	operators.push_back('-');
-	Number * result = new Placeholder(numbers, operators);
+	std::vector<Number*> * numbers = new std::vector<Number*>();
+	std::vector<char> * operators = new std::vector<char>();
+	numbers->push_back(this);
+	numbers->push_back(&rhs);
+	operators->push_back('-');
+	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
 }
 
@@ -73,13 +69,12 @@ Number& Variable::operator*(Number& rhs) {
 			Exponent * exponent = new Exponent(*this, *integer);
 			return *exponent;
 		} else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('*');
-			Number * result = new Placeholder(numbers, operators);
-			delete rhsCastVar;
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('*');
+			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
 		}
 	} else if (typeid(rhs) == typeid(Exponent)) {
@@ -92,23 +87,18 @@ Number& Variable::operator*(Number& rhs) {
 					Number * newExpInt = new Integer(integer->getInt() + 1);
 					Exponent * exponent = new Exponent(rhs, *newExpInt);;
 					delete integer;
-					delete rhsCastVar;
-					delete rhsCastExp;
 					return *exponent;
 				}
 			}
-			delete rhsCastVar;
 		}
-
-		delete rhsCastExp;
 	}
 
-	std::vector<Number*> numbers;
-	std::vector<char> operators;
-	numbers.push_back(this);
-	numbers.push_back(&rhs);
-	operators.push_back('*');
-	Number * result = new Placeholder(numbers, operators);
+	std::vector<Number*> * numbers = new std::vector<Number*>();
+	std::vector<char> * operators = new std::vector<char>();
+	numbers->push_back(this);
+	numbers->push_back(&rhs);
+	operators->push_back('*');
+	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
 }
 
@@ -120,13 +110,12 @@ Number& Variable::operator/(Number& rhs) {
 			delete rhsCastVar;
 			return *result;
 		} else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('/');
-			Number * result = new Placeholder(numbers, operators);
-			delete rhsCastVar;
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('/');
+			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
 		}
 	} else if (typeid(rhs) == typeid(Exponent)) {
@@ -140,24 +129,18 @@ Number& Variable::operator/(Number& rhs) {
 					Exponent * exponent = new Exponent(*this, *newExpInt);
 
 					delete integer;
-					delete rhsCastVar;
-					delete rhsCastExp;
 					return *exponent;
 				}
 			}
-
-			delete rhsCastVar;
 		}
-
-		delete rhsCastExp;
 	}
 
-	std::vector<Number*> numbers;
-	std::vector<char> operators;
-	numbers.push_back(this);
-	numbers.push_back(&rhs);
-	operators.push_back('/');
-	Number * result = new Placeholder(numbers, operators);
+	std::vector<Number*> * numbers = new std::vector<Number*>();
+	std::vector<char> * operators = new std::vector<char>();
+	numbers->push_back(this);
+	numbers->push_back(&rhs);
+	operators->push_back('/');
+	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
 }
 
