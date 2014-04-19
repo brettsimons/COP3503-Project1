@@ -27,6 +27,15 @@ Number& Placeholder::operator+(Number& rhs) {
 		std::vector<Number*> * rhsNumberList = &rhsCast->getNumbers();
 		std::vector<char> * rhsOperatorList = &rhsCast->getOperators();
 
+		if (rhsOperatorList->size() == 1 && rhsOperatorList->at(0) == '/' && this->operators->size() == 1 && this->operators->at(0) == '/') {
+			Number * toAdd1 = &(*this->numbers->at(0) * *rhsNumberList->at(1));
+			Number * toAdd2 = &(*rhsNumberList->at(0) * *this->numbers->at(1));
+			Number * numerator = &(*toAdd1 + *toAdd2);
+			Number * denominator = &(*rhsNumberList->at(1) * *this->numbers->at(1));
+			Number * addition = &(*numerator / *denominator);
+			return *addition;
+		}
+
 		for (int i = 0; i < rhsNumberList->size(); i++) {
 			Number * addition = &(*this + *rhsNumberList->at(i));
 
@@ -198,6 +207,15 @@ Number& Placeholder::operator-(Number& rhs) {
 		std::vector<Number*> * rhsNumberList = &rhsCast->getNumbers();
 		std::vector<char> * rhsOperatorList = &rhsCast->getOperators();
 
+		if (rhsOperatorList->size() == 1 && rhsOperatorList->at(0) == '/' && this->operators->size() == 1 && this->operators->at(0) == '/') {
+			Number * toAdd1 = &(*this->numbers->at(0) * *rhsNumberList->at(1));
+			Number * toAdd2 = &(*rhsNumberList->at(0) * *this->numbers->at(1));
+			Number * numerator = &(*toAdd1 - *toAdd2);
+			Number * denominator = &(*rhsNumberList->at(1) * *this->numbers->at(1));
+			Number * addition = &(*numerator / *denominator);
+			return *addition;
+		}
+
 		for (int i = 0; i < rhsNumberList->size(); i++) {
 			Number * subtraction = &(*this - *rhsNumberList->at(i));
 
@@ -251,7 +269,7 @@ Number& Placeholder::operator-(Number& rhs) {
 		Integer * rhsCast = dynamic_cast<Integer*>(&rhs);
 
 		for (int i = 0; i < this->numbers->size(); i++) {
-			if (i != 0 && this->operators->at(i-1) == '/') {
+			if (i != 0 && (this->operators->at(i-1) == '/' || this->operators->at(i-1) == '*')) {
 
 			} else if (this->operators->size() > 0 && (i == 0 && this->operators->at(0) == '/') || (i != 0 && this->operators->at(i - 1) == '/')) {
 				Number * toSubtract = &(*this->numbers->at(i + 1) * *rhsCast);
@@ -324,7 +342,6 @@ Number& Placeholder::operator-(Number& rhs) {
 			} else if (i == this->numbers->size() - 1) {
 				this->numbers->push_back(&rhs);
 				this->operators->push_back('-');
-				delete rhsCast;
 				return *this;
 			}
 		}
@@ -388,8 +405,7 @@ Number& Placeholder::operator*(Number& rhs) {
 	} else {
 		for (int i = 0; i < this->operators->size(); i++) {
 			if (this->operators->at(i) == '/') {
-				i++;
-				this->numbers->at(i) = &(*this->numbers->at(i - 1) * rhs);
+				this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
 			} else if (this->operators->at(i) == '+' || this->operators->at(i) == '-') {
 				this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
 			} else if (this->operators->at(i) == '*') {
@@ -437,7 +453,6 @@ Number& Placeholder::operator*(Number& rhs) {
 }
 
 Number& Placeholder::operator/(Number& rhs) {
-	// TODO: sepcifically account for 1 / some fraction.
 	if (typeid(rhs) == typeid(Integer)) {
 		Integer * integer = dynamic_cast<Integer*>(&rhs);
 
@@ -447,35 +462,83 @@ Number& Placeholder::operator/(Number& rhs) {
 			// TODO: throw error.
 		}
 
-		std::vector<int> intArray;
-		bool hasInt = false;
+		if (this->numbers->size() == 2 && this->operators->at(0) == '/' && typeid(*this->numbers->at(0)) == typeid(Integer) && typeid(*this->numbers->at(1)) == typeid(Integer)) {
+			Number * result = &(*this->numbers->at(0) / *integer);
+			if (typeid(*result) == typeid(Integer)) {
+				return (*result / *this->numbers->at(1));
+			} else {
+				Number * denominator = &(*this->numbers->at(1) * *integer);
+				return (*this->numbers->at(0) / *denominator);
+			}
+		}
+
+		std::vector<int> * intArray = new std::vector<int>();
+		int indexOfDivision = -1;
 
 		for (int i = 0; i < this->operators->size(); i++) {
 			if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
 				Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
-				intArray.push_back(tempInt->getInt());
+				intArray->push_back(tempInt->getInt());
 			}
 
 			if (i == this->operators->size() - 1) {
-				intArray.push_back(integer->getInt());
+				intArray->push_back(integer->getInt());
 			}
 
 			if (this->operators->at(i) == '/') {
-				this->numbers->at(i + 1) = &(*this->numbers->at(i + 1) * rhs);
+				//this->numbers->at(i + 1) = &(*this->numbers->at(i + 1) * rhs);
+				indexOfDivision = i;
 
-				for (int x = 0; x < this->numbers->size(); x++) {
-					if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
-						Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
-						intArray.push_back(tempInt->getInt());
+				for (int x = 0; x < i; x++) {
+					if (typeid(*this->numbers->at(x)) == typeid(Integer)) {
+						Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(x));
+						intArray->push_back(tempInt->getInt());
 					}
 				}
 			}
 		}
 
-		int gcdResult = gcd(intArray);
-		Integer * gcdInteger = new Integer(gcdResult);
+		if (indexOfDivision >= 0) {
+			Placeholder * numerator = new Placeholder();
+			Placeholder * denominator = new Placeholder();
 
-		return (*this / *gcdInteger);
+			for (int x = 0; x < indexOfDivision; x++) {
+				if (x - 1 == indexOfDivision) {
+					numerator->getNumbers().push_back(this->numbers->at(x + 1));
+				} else {
+					numerator->getNumbers().push_back(this->numbers->at(x));
+					numerator->getOperators().push_back(this->operators->at(x));
+				}
+			}
+
+			for (int x = indexOfDivision; x < this->operators->size(); x++) {
+				if (x - 1 == this->operators->size()) {
+					numerator->getNumbers().push_back(this->numbers->at(x + 1));
+				} else {
+					numerator->getNumbers().push_back(this->numbers->at(x));
+					numerator->getOperators().push_back(this->operators->at(x));
+				}
+			}
+
+			int gcdResult = gcd(*intArray);
+			Integer * gcdInteger = new Integer(gcdResult);
+
+			if (gcdResult > 1) {
+				if (numerator->numbers->size() == 1 && typeid(numerator->numbers->at(0)) == typeid(Integer)) {
+					numerator->numbers->at(0) = &(*numerator->numbers->at(0) / *gcdInteger);
+				}
+
+				Placeholder * toReturn = new Placeholder();
+				toReturn->getNumbers().push_back(numerator);
+				toReturn->getNumbers().push_back(denominator);
+				toReturn->getOperators().push_back('/');
+				return *toReturn;
+			} else {
+				return *this;
+			}
+		} else {
+			// TODO: throw exception
+		}
 	} else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
@@ -494,8 +557,10 @@ std::string Placeholder::toString() {
 	for (int i = 0; i < this->numbers->size(); i++) {
 		if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
 			Integer * integer = dynamic_cast<Integer*>(this->numbers->at(i));
-			if (integer->getInt() == 1 && this->operators->size() > 0 && (this->operators->at(i) == '*' || (i != 0 && this->operators->at(i-1) == '/'))) {
-				i++;
+			if (integer->getInt() == 1 && this->operators->size() > 0) {
+				if ((i != 0 && this->operators->at(i-1) == '*') || (i != 0 && this->operators->at(i-1) == '/')) {
+					i++;
+				}
 			} else if (integer->getInt() == 0) {
 				int lowExtrenum = -1;
 				int highExtrenum = this->operators->size() - 1;
@@ -519,7 +584,7 @@ std::string Placeholder::toString() {
 }
 
 Number& Placeholder::simplify() {
-
+	return *this;
 }
 
 std::vector<Number*>& Placeholder::getNumbers() {

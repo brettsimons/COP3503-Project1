@@ -27,12 +27,10 @@ Integer::~Integer() {
 Number& Integer::operator+(Number& rhs) {
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
 		int answer = this->intContainer + rhsCast->intContainer;
-		delete rhsCast;
 
 		Number * integer = new Integer(answer);
 		return *integer;
 	} else {
-		delete rhsCast;
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			return rhs + *this;
@@ -53,12 +51,10 @@ Number& Integer::operator+(Number& rhs) {
 Number& Integer::operator-(Number& rhs) {
 	if (Integer * intCast = dynamic_cast<Integer*>(&rhs)) {
 		int answer = this->intContainer - intCast->intContainer;
-		delete intCast;
 
 		Number * integer = new Integer(answer);
 		return *integer;
 	} else {
-		delete intCast;
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Number * negativeOne = new Integer(-1);
@@ -81,13 +77,10 @@ Number& Integer::operator-(Number& rhs) {
 Number& Integer::operator*(Number& rhs) {
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
 		int answer = this->intContainer * rhsCast->intContainer;
-		delete rhsCast;
 
 		Number * integer = new Integer(answer);
 		return *integer;
 	} else {
-		delete rhsCast;
-
 		if (typeid(rhs) == typeid(Placeholder)) {
 			return rhs * *this;
 		}
@@ -108,7 +101,6 @@ Number& Integer::operator/(Number& rhs) {
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
 		if (this->intContainer % rhsCast->intContainer == 0) {
 			int answer = this->intContainer / rhsCast->intContainer;
-			delete rhsCast;
 
 			Number * integer = new Integer(answer);
 			return *integer;
@@ -128,8 +120,6 @@ Number& Integer::operator/(Number& rhs) {
 			return *placeholder;
 		}
 	} else {
-		delete rhsCast;
-
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs);
 

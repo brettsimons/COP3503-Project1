@@ -7,6 +7,7 @@
 
 #include "Calculator.h"
 #include <iostream>
+#include <stdexcept>
 
 using namespace std;
 
@@ -33,10 +34,10 @@ string Calculator::SimplifyExpression(string equation) {
 			bool foundClose = false;
 			bool isEnd = false;
 			char nextOp;
-			for (int x = i; x > equation.length(); x++) {
-				if (equation[x] == ')') {
-					i = x;
-				}
+			for (int x = i; x < equation.length(); x++) {
+				//if (equation[x] == ')') {
+					//i = x;
+				//}
 
 				if ((equation[x] == '*' || equation[x] == '/' || equation[x] == '+' || equation[x] == '-' || x + 1 == equation.length()) && foundClose) {
 					if (x + 1 == equation.length()) {
@@ -48,12 +49,12 @@ string Calculator::SimplifyExpression(string equation) {
 			}
 
 			if (isEnd) {
-				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length() - 1));
+				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length()));
 				numbers->push_back(lhs);
 
 				indexOfLastOp = i;
 			} else {
-				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length()));
 				numbers->push_back(lhs);
 				operators->push_back(nextOp);
 
@@ -101,32 +102,32 @@ Number& Calculator::PerformCalculations() {
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '*') {
 			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
-			// TODO: Fix simplify methods.
 			numbers->at(i) = result;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
+			i--;
 		} else if (operators->at(i) == '/') {
 			Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
-			// TODO: Fix simplify methods.
 			numbers->at(i) = result;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
+			i--;
 		}
 	}
 
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '+') {
 			Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
-			// TODO: Fix simplify methods.
 			numbers->at(i) = result;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
+			i--;
 		} else if (operators->at(i) == '-') {
 			Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
-			// TODO: Fix simplify methods.
 			numbers->at(i) = result;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
+			i--;
 		}
 	}
 
@@ -142,43 +143,54 @@ Number& Calculator::PerformCalculations() {
 Number& Calculator::Calculate(string equationSegment) {
 	int numType = CheckNumberType(equationSegment);
 
-	if (numType == 5) {
+	if (equationSegment[0] == '(' && equationSegment[equationSegment.length() - 1] == ')') {
 		std::vector<Number*> * localNumbers = new vector<Number*>();
 		std::vector<char> * localOperators = new vector<char>();
 
-		int indexOfLastOp = -1;
-		for (int i = 0; i < equationSegment.length(); i++) {
+		int indexOfLastOp = 0;
+		for (int i = 1; i < equationSegment.length(); i++) {
 			string segment = equationSegment;
 
 			if (i + 1 == equationSegment.length()) {
-				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, segment.length() - 1));
+				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, segment.length() - indexOfLastOp - 2));
 				localNumbers->push_back(lhs);
 			} else if (equationSegment[i] == '*') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(lhs);
 				localOperators->push_back('*');
+
+				indexOfLastOp = i;
 			} else if (equationSegment[i] == '/') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(lhs);
 				localOperators->push_back('/');
+
+				indexOfLastOp = i;
 			} else if (equationSegment[i] == '+') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(lhs);
 				localOperators->push_back('+');
-			} else if (equationSegment[i] == '-') {
-				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-				localNumbers->push_back(lhs);
-				localOperators->push_back('-');
-			}
 
-			indexOfLastOp = i;
+				indexOfLastOp = i;
+			} else if (equationSegment[i] == '-') {
+				if (indexOfLastOp + 1 == i) {
+					Placeholder * lhs = new Placeholder();
+					lhs->getNumbers().push_back(new Integer(-1));
+					lhs->getNumbers().push_back(new Integer(atoi(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1).c_str())));
+				} else {
+					Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
+					localNumbers->push_back(lhs);
+					localOperators->push_back('-');
+				}
+
+				indexOfLastOp = i;
+			}
 		}
 
 		Number * placeholder = new Placeholder(*localNumbers, *localOperators);
 		return *placeholder;
 	} else {
 		if (numType == 0) {
-			// TODO: Create integer type and add to numbers list.
 			Number * integer = new Integer(atoi(equationSegment.c_str()));
 			return *integer;
 		} else if (numType == 1) {
@@ -191,7 +203,7 @@ Number& Calculator::Calculate(string equationSegment) {
 			std::string beforeCarrot = equationSegment;
 			std::string afterCarrot = equationSegment;
 			beforeCarrot = beforeCarrot.substr(0, indexOfCarrot);
-			afterCarrot = afterCarrot.substr(indexOfCarrot, equationSegment.length() - indexOfCarrot - 1);
+			afterCarrot = afterCarrot.substr(indexOfCarrot + 1, equationSegment.length() - indexOfCarrot - 1);
 
 			Number * exponent = new Exponent(Calculate(beforeCarrot), Calculate(afterCarrot));
 			return *exponent;
@@ -220,7 +232,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					Number * root = new Root(Calculate(base), Calculate(argument));
 					return *root;
 				} else {
-					// TODO: Throw error
+					throw std::runtime_error("An unrecognized root was supplied.");
 				}
 			} else if (numType == 4) {
 				int indexOfRT = equationSegment.find("sqrt:");
@@ -231,7 +243,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					Number * root = new Root(*integer, Calculate(argument));
 					return *root;
 				} else {
-					// TODO: Throw error
+					throw std::runtime_error("An unrecognized quare root was supplied.");
 				}
 			}
 		} else if (numType == 6) {
@@ -254,7 +266,7 @@ Number& Calculator::Calculate(string equationSegment) {
 						Variable * var = new Variable(variable);
 						return *var;
 					} else {
-						// TODO: throw error
+						throw std::runtime_error("An unrecognized variable was supplied. Please try again with one letter variables or pi.");
 					}
 				}
 			}

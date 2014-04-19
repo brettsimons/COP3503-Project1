@@ -27,7 +27,6 @@ Number& Exponent::getExponent() {
 Number& Exponent::operator+(Number& rhs) {
 	if (Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs)) {
 		if((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
-            delete rhsCast;
             Number * integer = new Integer(2);
         	std::vector<Number*> * numbers = new std::vector<Number*>();
         	std::vector<char> * operators = new std::vector<char>();
@@ -58,14 +57,11 @@ Number& Exponent::operator+(Number& rhs) {
 Number& Exponent::operator-(Number& rhs) {
 	if (Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs)) {
 		if((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
-            delete rhsCast;
             Number * integer = new Integer(0);
             return *integer;
 		}
 	}
 	else {
-        delete rhsCast;
-
         if (typeid(rhs) == typeid(Placeholder)) {
         	Integer * neg = new Integer(-1);
             return (*neg * rhs) + *this;
@@ -100,7 +96,6 @@ Number& Exponent::operator*(Number& rhs) {
 			}
 			else{
 				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
-				delete rhsCastExp;
 				Number * expon = new Exponent(*base, *times);
 				return * expon;
 			}
@@ -140,13 +135,11 @@ Number& Exponent::operator/(Number& rhs) {
             }
             else{
                 Number * times = &(rhsCastExp->getExponent() + *this->exponent);
-                delete rhsCastExp;
                 Number * expon = new Exponent(*base, *times);
                 return * expon;
             }
         }
             Number * times = &(rhsCastExp->getExponent() - *this->exponent);
-            delete rhsCastExp;
             Number * expon = new Exponent(*base, *times);
             return * expon;
            }

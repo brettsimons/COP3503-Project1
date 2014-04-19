@@ -21,7 +21,6 @@ Variable::~Variable() {
 Number& Variable::operator+(Number& rhs) {
 	if (Variable * rhsCast = dynamic_cast<Variable*>(&rhs)) {
 		if (rhsCast->var == this->var) {
-			delete rhsCast;
 			Number * integer = new Integer(2);
 			std::vector<Number*> numbers;
 			std::vector<char> operators;
@@ -45,7 +44,6 @@ Number& Variable::operator+(Number& rhs) {
 Number& Variable::operator-(Number& rhs) {
 	if (Variable * rhsCast = dynamic_cast<Variable*>(&rhs)) {
 		if (rhsCast->var == this->var) {
-			delete rhsCast;
 			Number * integer = new Integer(0);
 			return *integer;
 		}
@@ -64,7 +62,6 @@ Number& Variable::operator*(Number& rhs) {
 	if (typeid(rhs) == typeid(Variable)) {
 		Variable * rhsCastVar = dynamic_cast<Variable*>(&rhs);
 		if (rhsCastVar->var == this->var) {
-			delete rhsCastVar;
 			Number * integer = new Integer(2);
 			Exponent * exponent = new Exponent(*this, *integer);
 			return *exponent;
@@ -85,8 +82,7 @@ Number& Variable::operator*(Number& rhs) {
 				if (typeid(rhsCastExp->getExponent()) == typeid(Integer)) {
 					Integer * integer = dynamic_cast<Integer*>(&rhsCastExp->getExponent());
 					Number * newExpInt = new Integer(integer->getInt() + 1);
-					Exponent * exponent = new Exponent(rhs, *newExpInt);;
-					delete integer;
+					Exponent * exponent = new Exponent(rhs, *newExpInt);
 					return *exponent;
 				}
 			}
@@ -107,7 +103,6 @@ Number& Variable::operator/(Number& rhs) {
 		Variable * rhsCastVar = dynamic_cast<Variable*>(&rhs);
 		if (rhsCastVar->var == this->var) {
 			Number * result = new Integer(1);
-			delete rhsCastVar;
 			return *result;
 		} else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
@@ -128,7 +123,6 @@ Number& Variable::operator/(Number& rhs) {
 					Number * newExpInt = new Integer(integer->getInt() - 1);
 					Exponent * exponent = new Exponent(*this, *newExpInt);
 
-					delete integer;
 					return *exponent;
 				}
 			}
