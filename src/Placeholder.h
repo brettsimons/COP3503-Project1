@@ -38,6 +38,8 @@ public:
 private:
 	std::vector<Number*> * numbers;
 	std::vector<char> * operators;
+
+	bool canAddOrSubtract(Placeholder * rhs);
 };
 
 #endif /* PLACEHOLDER_H_ */

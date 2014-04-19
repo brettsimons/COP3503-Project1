@@ -26,6 +26,7 @@ public:
 private:
 	Number& Calculate(std::string equation);
 	Number& PerformCalculations();
+	Number& PerformCalculations(Placeholder * toCalculate);
 	int CheckNumberType(std::string number);
 	std::vector<Number*> * numbers;
 	std::vector<char> * operators;

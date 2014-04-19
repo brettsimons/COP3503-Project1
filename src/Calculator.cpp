@@ -23,23 +23,31 @@ Calculator::~Calculator() {
 string Calculator::SimplifyExpression(string equation) {
 	equation.erase(std::remove(equation.begin(), equation.end(), ' '), equation.end());
 	int indexOfLastOp = -1;
+	bool hasOperators = true;
 
 	for (int i = 0; i < equation.length(); i++) {
 		string equationSegment = equation;
 
-		if (i + 1 == equation.length()) {
+		if (i + 1 == equation.length() && hasOperators) {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equationSegment.length()));
-			numbers->push_back(lhs);
-		} else if (equation[i] == '(') {
+			numbers->push_back(&lhs->simplify());
+		}
+		else if (equation[i] == '(') {
+			Placeholder * placeholder = new Placeholder();
+			hasOperators = false;
 			bool foundClose = false;
 			bool isEnd = false;
-			char nextOp;
+			char nextOp = NULL;
 			for (int x = i; x < equation.length(); x++) {
-				//if (equation[x] == ')') {
-					//i = x;
-				//}
+				if (equation[x] == ')') {
+					hasOperators = true;
+					i = x;
+				}
+				else if (equation[x] == ')' && x + 1 == equation.length()) {
+					i = x;
+				}
 
-				if ((equation[x] == '*' || equation[x] == '/' || equation[x] == '+' || equation[x] == '-' || x + 1 == equation.length()) && foundClose) {
+				if ((equation[x] == '*' || equation[x] == '/' || equation[x] == '+' || equation[x] == '-' || x + 1 == equation.length()) && !foundClose) {
 					if (x + 1 == equation.length()) {
 						isEnd = true;
 					} else {
@@ -50,38 +58,45 @@ string Calculator::SimplifyExpression(string equation) {
 
 			if (isEnd) {
 				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length()));
-				numbers->push_back(lhs);
+				numbers->push_back(&lhs->simplify());
 
 				indexOfLastOp = i;
 			} else {
 				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length()));
-				numbers->push_back(lhs);
-				operators->push_back(nextOp);
+				numbers->push_back(&lhs->simplify());
+
+				if (nextOp != NULL) {
+					operators->push_back(nextOp);
+				}
 
 				indexOfLastOp = i;
 			}
 		} else if (equation[i] == '*') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-			numbers->push_back(lhs);
+			numbers->push_back(&lhs->simplify());
 			operators->push_back('*');
+			hasOperators = true;
 
 			indexOfLastOp = i;
 		} else if (equation[i] == '/') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-			numbers->push_back(lhs);
+			numbers->push_back(&lhs->simplify());
 			operators->push_back('/');
+			hasOperators = true;
 
 			indexOfLastOp = i;
 		} else if (equation[i] == '+') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-			numbers->push_back(lhs);
+			numbers->push_back(&lhs->simplify());
 			operators->push_back('+');
+			hasOperators = true;
 
 			indexOfLastOp = i;
 		} else if (equation[i] == '-') {
 			Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-			numbers->push_back(lhs);
+			numbers->push_back(&lhs->simplify());
 			operators->push_back('-');
+			hasOperators = true;
 
 			indexOfLastOp = i;
 		}
@@ -117,17 +132,51 @@ Number& Calculator::PerformCalculations() {
 
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '+') {
-			Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
-			numbers->at(i) = result;
-			numbers->erase(numbers->begin() + i + 1);
-			operators->erase(operators->begin() + i);
-			i--;
+			if (typeid(*numbers->at(i)) != typeid(*numbers->at(i + 1))) {
+				Number * result = NULL;
+				int x = 0;
+				for (x = i+1; x < numbers->size(); x++) {
+					if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '+') {
+						result = &(*numbers->at(i) + *numbers->at(x));
+					} else if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '-') {
+						result = &(*numbers->at(i) - *numbers->at(x));
+					}
+				}
+				x--;
+				if (result != NULL) {
+					numbers->at(i) = result;
+					numbers->erase(numbers->begin() + x);
+					operators->erase(operators->begin() + x - 1);
+				}
+			} else {
+				Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
+				numbers->at(i) = result;
+				numbers->erase(numbers->begin() + i + 1);
+				operators->erase(operators->begin() + i);
+				i--;
+			}
 		} else if (operators->at(i) == '-') {
-			Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
-			numbers->at(i) = result;
-			numbers->erase(numbers->begin() + i + 1);
-			operators->erase(operators->begin() + i);
-			i--;
+			if (typeid(*numbers->at(i)) != typeid(*numbers->at(i + 1))) {
+				Number * result = NULL;
+				int x = 0;
+				for (x = i+1; x < numbers->size(); x++) {
+					if (typeid(*numbers->at(i)) == typeid(*numbers->at(x))) {
+						result = &(*numbers->at(i) - *numbers->at(x));
+					}
+				}
+				x--;
+				if (result != NULL) {
+					numbers->at(i) = result;
+					numbers->erase(numbers->begin() + x);
+					operators->erase(operators->begin() + x - 1);
+				}
+			} else {
+				Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+				numbers->at(i) = result;
+				numbers->erase(numbers->begin() + i + 1);
+				operators->erase(operators->begin() + i);
+				i--;
+			}
 		}
 	}
 
@@ -137,6 +186,88 @@ Number& Calculator::PerformCalculations() {
 	} else {
 		numbers->at(0) = &(numbers->at(0)->simplify());
 		return *numbers->at(0);
+	}
+}
+
+Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
+	for (int i = 0; i < toCalculate->getOperators().size(); i++) {
+		if (toCalculate->getOperators().at(i) == '*') {
+			Number * result = &(*toCalculate->getNumbers().at(i) * *toCalculate->getNumbers().at(i + 1));
+			toCalculate->getNumbers().at(i) = result;
+			toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
+			toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
+			i--;
+		}
+		else if (toCalculate->getOperators().at(i) == '/') {
+			Number * result = &(*toCalculate->getNumbers().at(i) / *toCalculate->getNumbers().at(i + 1));
+			toCalculate->getNumbers().at(i) = result;
+			toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
+			toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
+			i--;
+		}
+	}
+
+	for (int i = 0; i < toCalculate->getOperators().size(); i++) {
+		if (toCalculate->getOperators().at(i) == '+') {
+			if (typeid(*toCalculate->getNumbers().at(i)) != typeid(*toCalculate->getNumbers().at(i + 1))) {
+				Number * result = NULL;
+				int x = 0;
+				for (x = i + 1; x < toCalculate->getNumbers().size(); x++) {
+					if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x)) && toCalculate->getOperators().at(x - 1) == '+') {
+						result = &(*toCalculate->getNumbers().at(i) + *toCalculate->getNumbers().at(x));
+					}
+					else if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x)) && toCalculate->getOperators().at(x - 1) == '-') {
+						result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(x));
+					}
+				}
+				x--;
+				if (result != NULL) {
+					toCalculate->getNumbers().at(i) = result;
+					toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + x);
+					toCalculate->getOperators().erase(toCalculate->getOperators().begin() + x - 1);
+				}
+			}
+			else {
+				Number * result = &(*toCalculate->getNumbers().at(i) + *toCalculate->getNumbers().at(i + 1));
+				toCalculate->getNumbers().at(i) = result;
+				toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
+				toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
+				i--;
+			}
+		}
+		else if (toCalculate->getOperators().at(i) == '-') {
+			if (typeid(*toCalculate->getNumbers().at(i)) != typeid(*toCalculate->getNumbers().at(i + 1))) {
+				Number * result = NULL;
+				int x = 0;
+				for (x = i + 1; x < toCalculate->getNumbers().size(); x++) {
+					if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x))) {
+						result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(x));
+					}
+				}
+				x--;
+				if (result != NULL) {
+					toCalculate->getNumbers().at(i) = result;
+					toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + x);
+					toCalculate->getOperators().erase(toCalculate->getOperators().begin() + x - 1);
+				}
+			}
+			else {
+				Number * result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(i + 1));
+				toCalculate->getNumbers().at(i) = result;
+				toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
+				toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
+				i--;
+			}
+		}
+	}
+
+	if (!toCalculate->getOperators().empty()) {
+		Number * placeholder = new Placeholder(toCalculate->getNumbers(), toCalculate->getOperators());
+		return *placeholder;
+	}
+	else {
+		toCalculate->getNumbers().at(0) = &(toCalculate->getNumbers().at(0)->simplify());
+		return *toCalculate->getNumbers().at(0);
 	}
 }
 
@@ -153,22 +284,22 @@ Number& Calculator::Calculate(string equationSegment) {
 
 			if (i + 1 == equationSegment.length()) {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, segment.length() - indexOfLastOp - 2));
-				localNumbers->push_back(lhs);
+				localNumbers->push_back(&lhs->simplify());
 			} else if (equationSegment[i] == '*') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-				localNumbers->push_back(lhs);
+				localNumbers->push_back(&lhs->simplify());
 				localOperators->push_back('*');
 
 				indexOfLastOp = i;
 			} else if (equationSegment[i] == '/') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-				localNumbers->push_back(lhs);
+				localNumbers->push_back(&lhs->simplify());
 				localOperators->push_back('/');
 
 				indexOfLastOp = i;
 			} else if (equationSegment[i] == '+') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-				localNumbers->push_back(lhs);
+				localNumbers->push_back(&lhs->simplify());
 				localOperators->push_back('+');
 
 				indexOfLastOp = i;
@@ -179,7 +310,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					lhs->getNumbers().push_back(new Integer(atoi(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1).c_str())));
 				} else {
 					Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
-					localNumbers->push_back(lhs);
+					localNumbers->push_back(&lhs->simplify());
 					localOperators->push_back('-');
 				}
 
@@ -187,8 +318,15 @@ Number& Calculator::Calculate(string equationSegment) {
 			}
 		}
 
-		Number * placeholder = new Placeholder(*localNumbers, *localOperators);
-		return *placeholder;
+		Placeholder * placeholder = new Placeholder(*localNumbers, *localOperators);
+		Number * result = placeholder;
+
+		if (localOperators->size() > 0) {
+			result = &PerformCalculations(placeholder);
+		}
+
+		result = &result->simplify();
+		return *result;
 	} else {
 		if (numType == 0) {
 			Number * integer = new Integer(atoi(equationSegment.c_str()));
@@ -206,6 +344,7 @@ Number& Calculator::Calculate(string equationSegment) {
 			afterCarrot = afterCarrot.substr(indexOfCarrot + 1, equationSegment.length() - indexOfCarrot - 1);
 
 			Number * exponent = new Exponent(Calculate(beforeCarrot), Calculate(afterCarrot));
+			exponent = &exponent->simplify();
 			return *exponent;
 		} else if (numType == 2) {
 			int indexOfColon = 0;
@@ -220,6 +359,7 @@ Number& Calculator::Calculate(string equationSegment) {
 			argument = argument.substr(indexOfColon + 1, equationSegment.length() - indexOfColon - 1);
 
 			Number * log = new Log(Calculate(base), Calculate(argument));
+			log = &log->simplify();
 			return *log;
 		} else if (numType == 3 || numType == 4) {
 			if (numType == 3) {
@@ -227,9 +367,10 @@ Number& Calculator::Calculate(string equationSegment) {
 				if (indexOfRT > 0) {
 					std::string base = equationSegment;
 					std::string argument = equationSegment;
-					base = base.substr(0, indexOfRT + 1);
-					argument = argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 4);
+					base = base.substr(0, indexOfRT);
+					argument = argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 3);
 					Number * root = new Root(Calculate(base), Calculate(argument));
+					root = &root->simplify();
 					return *root;
 				} else {
 					throw std::runtime_error("An unrecognized root was supplied.");
@@ -241,6 +382,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					argument = argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 6);
 					Number * integer = new Integer(2);
 					Number * root = new Root(*integer, Calculate(argument));
+					root = &root->simplify();
 					return *root;
 				} else {
 					throw std::runtime_error("An unrecognized quare root was supplied.");
@@ -275,27 +417,30 @@ Number& Calculator::Calculate(string equationSegment) {
 }
 
 int Calculator::CheckNumberType(string number) {
-	int indexOfColon = 0;
-	int indexOfCarrot = 0;
+	int indexOfColon = -1;
+	int indexOfCarrot = -1;
 
 	if (IsPlaceholder(number)) return 5;
 
 	for (int i = 0; i < number.length(); i++) {
-		if (isalpha(number.at(i))) {
-			if (i + 1 == number.length() && isalpha(number.at(i))) {
-				return 6;
-			}
-			else if ((number.at(i) == 'p' && number.at(i+1) == 'i' && (i + 2 == number.length() || !isalpha(number.at(i+2)) || number.at(i+2) != ':' || number.at(i+2) != '^')) || (isalpha(number.at(i)) && (!isalpha(number.at(i+1)) || number.at(i+1) != ':' || number.at(i+1) != '^'))) {
-				return 6;
-			}
+		if (number[i] == ':') {
+			indexOfColon = i;
+		}
+		else if (number[i] == '^') {
+			indexOfCarrot = i;
 		}
 	}
 
-	for (int i = 0; i < number.length(); i++) {
-		if (number[i] == ':') {
-			indexOfColon = i;
-		} else if (number[i] == '^') {
-			indexOfCarrot = i;
+	if (indexOfColon == -1 && indexOfCarrot == -1) {
+		for (int i = 0; i < number.length(); i++) {
+			if (isalpha(number.at(i))) {
+				if (i + 1 == number.length() && isalpha(number.at(i))) {
+					return 6;
+				}
+				else if ((number.at(i) == 'p' && number.at(i + 1) == 'i' && (i + 2 == number.length() || !isalpha(number.at(i + 2)) || number.at(i + 2) != ':' || number.at(i + 2) != '^')) || (isalpha(number.at(i)) && (!isalpha(number.at(i + 1)) || number.at(i + 1) != ':' || number.at(i + 1) != '^'))) {
+					return 6;
+				}
+			}
 		}
 	}
 

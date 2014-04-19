@@ -30,14 +30,21 @@ Number& Root::simplify(){
 		Integer * rootInt = dynamic_cast<Integer*>(root);
 		std::vector<int> vec = primeFactors(baseInt->getInt());
 
-		double invRoot = 1/((double)rootInt->getInt());
+		double invRoot = 1/((double)baseInt->getInt());
 
-		if (typeid(pow(baseInt->getInt(), invRoot)) == typeid(int)) {
-			return *(new Integer(pow(baseInt->getInt(), invRoot)));
+		if ((int)pow(rootInt->getInt(), invRoot) == pow(rootInt->getInt(), invRoot)) {
+			return *(new Integer(pow(rootInt->getInt(), invRoot)));
 		}
 
-		int c2,c3,c5,c7=0;
-		int fin2,fin3,fin5,fin7 = 0;
+		int c2 = 0;
+		int c3 = 0;
+		int c5 = 0;
+		int c7 = 0;
+
+		int fin2 = 0;
+		int fin3 = 0;
+		int fin5 = 0;
+		int fin7 = 0;
 
 		for(int i = 0; i < vec.size(); i++) {
 			if(vec[i] == 2) {

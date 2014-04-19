@@ -219,6 +219,26 @@ Number& Log::simplify() {
 			}
 		}
 	}
+	else if (typeid(*argument) == typeid(Variable) && typeid(*base) == typeid(Variable)) {
+		Variable * argumentVar = dynamic_cast<Variable*>(argument);
+		Variable * baseVar = dynamic_cast<Variable*>(base);
+
+		if (argumentVar->getVariable() == baseVar->getVariable()) {
+			return *(new Integer(1));
+		}
+	}
+	else if (typeid(*argument) == typeid(Exponent) && typeid(*base) == typeid(Variable)) {
+		Exponent * argumentExp = dynamic_cast<Exponent*>(argument);
+		Variable * baseVar = dynamic_cast<Variable*>(base);
+
+		if (typeid(argumentExp->getBase()) == typeid(Variable)) {
+			Variable * argumentVar = dynamic_cast<Variable*>(&argumentExp->getBase());
+
+			if (argumentVar->getVariable() == baseVar->getVariable()) {
+				return argumentExp->getExponent();
+			}
+		}
+	}
 	return *this;
 }
 
