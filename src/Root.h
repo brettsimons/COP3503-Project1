@@ -38,6 +38,8 @@ public:
 private:
 	Number * base;
 	Number * root;
+
+	std::vector<int*> primeFactors(int number);
 };
 
 #endif /* ROOT_H_ */

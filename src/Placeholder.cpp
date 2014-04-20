@@ -552,17 +552,17 @@ Number& Placeholder::operator*(Number& rhs) {
 				if (numberOfMoreMult > 0) {
 					bool typeMatchFound = false;
 
-					for (int x = 0; x < numberOfMoreMult; x++) {
-						if (typeid(*this->numbers->at(i)) == typeid(rhs)) {
+					for (int x = 0; x <= numberOfMoreMult; x++) {
+						if (typeid(*this->numbers->at(x)) == typeid(rhs)) {
 							typeMatchFound = true;
-							this->numbers->at(i) = &(*this->numbers->at(i) * rhs);
+							this->numbers->at(x) = &(*this->numbers->at(x) * rhs);
 						}
 					}
 
 					if (!typeMatchFound) {
-						for (int x = 0; x < numberOfMoreMult; x++) {
-							if ((typeid(*this->numbers->at(i)) == typeid(Root) && typeid(rhs) == typeid(Exponent)) || (typeid(*this->numbers->at(i)) == typeid(Exponent) && typeid(rhs) == typeid(Root))) {
-								this->numbers->at(i) == &(*this->numbers->at(i) * rhs);
+						for (int x = 0; x <= numberOfMoreMult; x++) {
+							if ((typeid(*this->numbers->at(x)) == typeid(Root) && typeid(rhs) == typeid(Exponent)) || (typeid(*this->numbers->at(x)) == typeid(Exponent) && typeid(rhs) == typeid(Root))) {
+								this->numbers->at(x) == &(*this->numbers->at(x) * rhs);
 								typeMatchFound = true;
 							}
 						}
@@ -716,6 +716,80 @@ std::string Placeholder::toString() {
 Number& Placeholder::simplify() {
 	if (this->numbers->size() == 1) {
 		return this->numbers->at(0)->simplify();
+	} else {
+		for (int i = 0; i < operators->size(); i++) {
+			if (operators->at(i) == '*') {
+				Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
+				numbers->at(i) = result;
+				numbers->erase(numbers->begin() + i + 1);
+				operators->erase(operators->begin() + i);
+				i--;
+			} else if (operators->at(i) == '/') {
+				Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
+				numbers->at(i) = result;
+				numbers->erase(numbers->begin() + i + 1);
+				operators->erase(operators->begin() + i);
+				i--;
+			}
+		}
+
+		for (int i = 0; i < operators->size(); i++) {
+			if (operators->at(i) == '+') {
+				if (typeid(*numbers->at(i)) != typeid(*numbers->at(i + 1))) {
+					Number * result = NULL;
+					int x = 0;
+					for (x = i+1; x < numbers->size(); x++) {
+						if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '+') {
+							result = &(*numbers->at(i) + *numbers->at(x));
+						} else if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '-') {
+							result = &(*numbers->at(i) - *numbers->at(x));
+						}
+					}
+					x--;
+					if (result != NULL) {
+						numbers->at(i) = result;
+						numbers->erase(numbers->begin() + x);
+						operators->erase(operators->begin() + x - 1);
+					}
+				} else {
+					Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
+					numbers->at(i) = result;
+					numbers->erase(numbers->begin() + i + 1);
+					operators->erase(operators->begin() + i);
+					i--;
+				}
+			} else if (operators->at(i) == '-') {
+				if (typeid(*numbers->at(i)) != typeid(*numbers->at(i + 1))) {
+					Number * result = NULL;
+					int x = 0;
+					for (x = i+1; x < numbers->size(); x++) {
+						if (typeid(*numbers->at(i)) == typeid(*numbers->at(x))) {
+							result = &(*numbers->at(i) - *numbers->at(x));
+						}
+					}
+					x--;
+					if (result != NULL) {
+						numbers->at(i) = result;
+						numbers->erase(numbers->begin() + x);
+						operators->erase(operators->begin() + x - 1);
+					}
+				} else {
+					Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+					numbers->at(i) = result;
+					numbers->erase(numbers->begin() + i + 1);
+					operators->erase(operators->begin() + i);
+					i--;
+				}
+			}
+		}
+
+		if (!operators->empty()) {
+			Number * placeholder = new Placeholder(*this->numbers, *this->operators);
+			return *placeholder;
+		} else {
+			numbers->at(0) = numbers->at(0);
+			return *numbers->at(0);
+		}
 	}
 	return *this;
 }
@@ -767,6 +841,66 @@ bool Placeholder::canAddOrSubtract(Placeholder * rhs) {
 							matched = true;
 						}
 						else if (typeid(*numbers->at(i)) == typeid(Integer) || typeid(*numbers->at(i + 1)) == typeid(Integer) || typeid(*rhs->getNumbers()[y]) == typeid(Integer) || typeid(*rhs->getNumbers()[y + 1]) == typeid(Integer)) {
+							matched = true;
+						}
+						else {
+							matched = false;
+						}
+					}
+				}
+			}
+
+			if (!matched) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool Placeholder::canAddOrSubtract(Placeholder * lhs, Placeholder * rhs) {
+	if (rhs->getNumbers().size() == lhs->getNumbers().size()) {
+		for (int i = 0; i < lhs->getNumbers().size(); i++) {
+			bool matched = false;
+
+			for (int y = 0; y < rhs->getNumbers().size(); y++) {
+				if (typeid(lhs->getNumbers().at(i)) == typeid(Integer) && typeid(*rhs->getNumbers()[y]) == typeid(Integer)) {
+					matched = true;
+				} else if (*lhs->getNumbers().at(i) == *rhs->getNumbers()[y]) {
+					matched = true;
+				}
+			}
+
+			if (!matched) {
+				return false;
+			}
+		}
+
+		for (int i = 0; i < lhs->getOperators().size(); i++) {
+			bool matched = false;
+
+			for (int y = 0; y < rhs->getOperators().size(); y++) {
+				if (lhs->getOperators().at(i) == rhs->getOperators()[y]) {
+					if (lhs->getOperators()[i] == '-' || lhs->getOperators()[i] == '/') {
+						if (lhs->getNumbers()[i] == rhs->getNumbers()[y] && lhs->getNumbers()[i + 1] == rhs->getNumbers()[y + 1]) {
+							matched = true;
+						}
+						else {
+							matched = false;
+						}
+					}
+					else {
+						if (lhs->getNumbers()[i] == rhs->getNumbers()[y] && lhs->getNumbers()[i + 1] == rhs->getNumbers()[y + 1]) {
+							matched = true;
+						}
+						else if (lhs->getNumbers()[i + 1] == rhs->getNumbers()[y] && lhs->getNumbers()[i] == rhs->getNumbers()[y + 1]) {
+							matched = true;
+						}
+						else if (typeid(lhs->getNumbers().at(i)) == typeid(Integer) || typeid(lhs->getNumbers().at(i + 1)) == typeid(Integer) || typeid(*rhs->getNumbers()[y]) == typeid(Integer) || typeid(*rhs->getNumbers()[y + 1]) == typeid(Integer)) {
 							matched = true;
 						}
 						else {

@@ -28,7 +28,7 @@ Number& Root::simplify(){
 	if (typeid(*base) == typeid(Integer) && typeid(*root) == typeid(Integer)) {
 		Integer * baseInt = dynamic_cast<Integer*>(base);
 		Integer * rootInt = dynamic_cast<Integer*>(root);
-		std::vector<int> vec = primeFactors(baseInt->getInt());
+		std::vector<int*> vec = primeFactors(baseInt->getInt());
 
 		double invRoot = 1/((double)baseInt->getInt());
 
@@ -36,83 +36,39 @@ Number& Root::simplify(){
 			return *(new Integer(pow(rootInt->getInt(), invRoot)));
 		}
 
-		int c2 = 0;
-		int c3 = 0;
-		int c5 = 0;
-		int c7 = 0;
+		int multiplier = 1;
+		int innerValue = 1;
 
-		int fin2 = 0;
-		int fin3 = 0;
-		int fin5 = 0;
-		int fin7 = 0;
-
-		for(int i = 0; i < vec.size(); i++) {
-			if(vec[i] == 2) {
-				c2++;
-			}
-			if(vec[i] == 3) {
-				c3++;
-			}
-			if(vec[i] == 5) {
-				c5++;
-			}
-			if(vec[i] == 7) {
-				c7++;
-			}
-		}
-
-		if(c2 > 1) {
-			int n = c2/rootInt->getInt();
-			fin2 = n * 2;
-			if(fin2 == 0){
-				fin2 = 1;
-			}
-		}
-
-		else {
-			fin2 = 1;
-		}
-
-		if(c3 > 1) {
-			int n = c3/rootInt->getInt();
-			fin3 = n * 3;
-			if(fin3 == 0){
-				fin3 = 1;
+		for (int i = 1; i < vec.size(); i++) {
+			int exp = vec.at(i)[1];
+			int multiplierExp = 0;
+			for (int x = 0; x < vec.at(i)[1]; x++) {
+				if (exp - rootInt->getInt() >= 0) {
+					exp = exp - rootInt->getInt();
+					multiplierExp++;
+				} else {
+					x = vec.at(i)[1];
+				}
 			}
 
+			vec.at(i)[1] = exp;
+			multiplier *= pow(vec.at(i)[0], multiplierExp);
+			innerValue *= pow(vec.at(i)[0], vec.at(i)[1]);
 		}
 
-		else {
-			fin3 = 1;
-		}
-
-		if(c5 > 1) {
-			int n = c5/rootInt->getInt();
-			fin5 = n * 5;
-			if(fin5 == 0){
-				fin5 = 1;
+		if (multiplier > 1) {
+			if (innerValue == 1) {
+				return *(new Integer(multiplier));
 			}
 
+			Placeholder * ph = new Placeholder();
+			ph->getNumbers().push_back(new Integer(multiplier));			
+			this->base = new Integer(innerValue);
+			ph->getNumbers().push_back(this);
+			ph->getOperators().push_back('*');
+			return *ph;
 		}
 
-		else {
-			fin5 = 1;
-		}
-
-		if(c7 > 1) {
-			int n = c7/rootInt->getInt();
-			fin7 = n * 7;
-			if(fin7 == 0){
-				fin7 = 1;
-			}
-		}
-
-		else {
-			fin7 = 1;
-		}
-
-		int maxFactor = fin2 * fin3 * fin5 * fin7;
-		int baseFin = baseInt->getInt()/pow(maxFactor,rootInt->getInt());
 		return *this;
 	} else if (typeid(*root) == typeid(Placeholder)) {
 		Placeholder * rootPlaceholder = dynamic_cast<Placeholder*>(root);
@@ -146,6 +102,49 @@ Number& Root::simplify(){
 	} else {
 		return *this;
 	}
+}
+
+std::vector<int*> Root::primeFactors(int number) {
+	std::vector<int*> * toReturn = new std::vector<int*>();
+	int * intHolder = new int[2];
+	intHolder[0] = 1;
+	intHolder[1] = number;
+	toReturn->push_back(intHolder);
+	bool isPrime = true;
+	for (int i = 2; i < number; i++) {
+		if (number % i == 0) {
+			for (int x = 2; x < i; x++) {
+				if (i % x == 0) {
+					isPrime = false;
+				} else if (!isPrime) {
+					x = i;
+				}
+			}
+
+			if (isPrime) {
+				int tempNumber = number;
+				int multiplier = 0;
+				for (int x = 0; x < number; x++) {
+					if (tempNumber % i == 0) {
+						tempNumber = tempNumber / i;
+						multiplier++;
+					} else {
+						x = number;
+					}
+				}
+
+				int * holder = new int[2];
+				holder[0] = i;
+				holder[1] = multiplier;
+
+				toReturn->push_back(holder);
+			}
+
+			isPrime = true;
+		}
+	}
+
+	return *toReturn;
 }
 
 std::string Root::toString() {
@@ -202,8 +201,8 @@ Number& Root::operator*(Number& rhs) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		if (rhsCast->getRoot() == *this->root) {
 				Number * innards = &(rhsCast->getBase() * *this->base);
-				Root * answer = new Root(*this, *innards);
-				return *answer;
+				Root * answer = new Root(*this->root, *innards);
+				return answer->simplify();
 		}
 	}
 	std::vector<Number*> numbers;
@@ -220,8 +219,8 @@ Number& Root::operator/(Number& rhs) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		if (rhsCast->getRoot() == *this->root) {
 				Number * innards = &(*this->base / rhsCast->getBase());
-				Root * answer = new Root(*this, *innards);
-				return *answer;
+				Root * answer = new Root(*this->root, *innards);
+				return answer->simplify();
 		}
 	}
 

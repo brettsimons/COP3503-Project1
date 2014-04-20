@@ -37,22 +37,15 @@ string Calculator::SimplifyExpression(string equation) {
 			hasOperators = false;
 			bool foundClose = false;
 			bool isEnd = false;
-			char nextOp = NULL;
+			int closeBracket = -1;
 			for (int x = i; x < equation.length(); x++) {
-				if (equation[x] == ')') {
+				if (equation[x] == ')' && x + 1 == equation.length()) {
+					i = x + 1;
+				} else if (equation[x] == ')') {
 					hasOperators = true;
-					i = x;
-				}
-				else if (equation[x] == ')' && x + 1 == equation.length()) {
-					i = x;
-				}
-
-				if ((equation[x] == '*' || equation[x] == '/' || equation[x] == '+' || equation[x] == '-' || x + 1 == equation.length()) && !foundClose) {
-					if (x + 1 == equation.length()) {
-						isEnd = true;
-					} else {
-						nextOp = equation[x];
-					}
+					i = x + 1;
+					closeBracket = x;
+					break;
 				}
 			}
 
@@ -61,13 +54,15 @@ string Calculator::SimplifyExpression(string equation) {
 				numbers->push_back(&lhs->simplify());
 
 				indexOfLastOp = i;
+			} else if (closeBracket != -1) {
+				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, indexOfLastOp + 1 + closeBracket + 1));
+				numbers->push_back(&lhs->simplify());
+				operators->push_back(equationSegment.substr(closeBracket + 1, 1).c_str()[0]);
+
+				indexOfLastOp = i;
 			} else {
 				Number * lhs = &Calculate(equationSegment.substr(indexOfLastOp + 1, equation.length()));
 				numbers->push_back(&lhs->simplify());
-
-				if (nextOp != NULL) {
-					operators->push_back(nextOp);
-				}
 
 				indexOfLastOp = i;
 			}
@@ -117,13 +112,13 @@ Number& Calculator::PerformCalculations() {
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '*') {
 			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
-			numbers->at(i) = result;
+			numbers->at(i) = &result->simplify();
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
 			i--;
 		} else if (operators->at(i) == '/') {
 			Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
-			numbers->at(i) = result;
+			numbers->at(i) = &result->simplify();
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
 			i--;
@@ -144,13 +139,13 @@ Number& Calculator::PerformCalculations() {
 				}
 				x--;
 				if (result != NULL) {
-					numbers->at(i) = result;
+					numbers->at(i) = &result->simplify();
 					numbers->erase(numbers->begin() + x);
 					operators->erase(operators->begin() + x - 1);
 				}
 			} else {
 				Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
-				numbers->at(i) = result;
+				numbers->at(i) = &result->simplify();
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
 				i--;
@@ -166,13 +161,13 @@ Number& Calculator::PerformCalculations() {
 				}
 				x--;
 				if (result != NULL) {
-					numbers->at(i) = result;
+					numbers->at(i) = &result->simplify();
 					numbers->erase(numbers->begin() + x);
 					operators->erase(operators->begin() + x - 1);
 				}
 			} else {
 				Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
-				numbers->at(i) = result;
+				numbers->at(i) = &result->simplify();
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
 				i--;
@@ -369,7 +364,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					std::string argument = equationSegment;
 					base = base.substr(0, indexOfRT);
 					argument = argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 3);
-					Number * root = new Root(Calculate(base), Calculate(argument));
+					Number * root = new Root(Calculate(argument), Calculate(base));
 					root = &root->simplify();
 					return *root;
 				} else {
@@ -381,7 +376,7 @@ Number& Calculator::Calculate(string equationSegment) {
 					std::string argument = equationSegment;
 					argument = argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 6);
 					Number * integer = new Integer(2);
-					Number * root = new Root(*integer, Calculate(argument));
+					Number * root = new Root(Calculate(argument), *integer);
 					root = &root->simplify();
 					return *root;
 				} else {

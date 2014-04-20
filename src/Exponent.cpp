@@ -34,7 +34,7 @@ Number& Exponent::operator+(Number& rhs) {
             numbers->push_back(integer);
             operators->push_back('+');
             Number * result = new Placeholder(*numbers, *operators);
-            return *result;
+			return *result;
 		}
 	}
 	else {
@@ -74,7 +74,7 @@ Number& Exponent::operator-(Number& rhs) {
             numbers->push_back(&rhs);
             operators->push_back('-');
             Number * placeholder = new Placeholder(*numbers, *operators);
-            return *placeholder;
+			return *placeholder;
         }
     }
 }
@@ -92,12 +92,12 @@ Number& Exponent::operator*(Number& rhs) {
 				operators->push_back('+');
 				Number * placeholder = new Placeholder(*numbers, *operators);
 				Number * expon = new Exponent(*base, *placeholder);
-				return * expon;
+				return expon->simplify();
 			}
 			else{
 				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
 				Number * expon = new Exponent(*base, *times);
-				return * expon;
+				return expon->simplify();
 			}
 		}
 	}
@@ -131,17 +131,17 @@ Number& Exponent::operator/(Number& rhs) {
                 operators->push_back('-');
                 Number * placeholder = new Placeholder(*numbers, *operators);
                 Number * expon = new Exponent(*base, *placeholder);
-                return * expon;
+                return expon->simplify();
             }
             else{
                 Number * times = &(rhsCastExp->getExponent() + *this->exponent);
                 Number * expon = new Exponent(*base, *times);
-                return * expon;
+                return expon->simplify();
             }
         }
             Number * times = &(rhsCastExp->getExponent() - *this->exponent);
             Number * expon = new Exponent(*base, *times);
-            return * expon;
+            return expon->simplify();
            }
         else {
             if (typeid(rhs) == typeid(Placeholder)) {

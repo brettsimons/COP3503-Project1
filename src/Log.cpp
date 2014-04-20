@@ -23,7 +23,7 @@ Number& Log::operator+(Number& rhs) {
 		if(rhsCast->getBase() == *this->base) {
             Number * answer = &(rhsCast->getArgument() * *this->argument);
             Log * log = new Log(*base, *answer);
-            return * log;
+			return log->simplify();
         }
 	}
 
@@ -48,7 +48,7 @@ Number& Log::operator-(Number& rhs) {
 		if(rhsCast->getBase() == *this->base) {
             Number * answer = &(rhsCast->getArgument() / *this->argument);
             Log * log = new Log(*base, *answer);
-            return * log;
+            return log->simplify();
         }
 
 	}
@@ -75,7 +75,7 @@ Number& Log::operator*(Number& rhs) {
 		if((rhsCast->getBase() == *this->base) && (rhsCast->getArgument() == *this->argument)) {
     		Integer * raisedTo = new Integer(2);
             Exponent * exp = new Exponent(*this, *raisedTo);
-            return * exp;
+			return exp->simplify();
         }
     }
 
@@ -86,7 +86,7 @@ Number& Log::operator*(Number& rhs) {
         		Integer * toAdd = new Integer(1);
             	Number * raisedTo = &(rhsCast->getExponent() + *toAdd);
                 Exponent * exp = new Exponent(*this, *raisedTo);
-                return * exp;
+                return exp->simplify();
             }
            else {
                std::vector<Number*> numbers;
@@ -122,7 +122,7 @@ Number& Log::operator/(Number& rhs) {
     if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
 		if(rhsCast->getBase() == *this->base) {
             Log * log = new Log(this->getArgument(), rhsCast->getArgument());
-            return * log;
+			return log->simplify();
         }
 	} else {
 

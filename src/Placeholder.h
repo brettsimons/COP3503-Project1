@@ -40,6 +40,7 @@ private:
 	std::vector<char> * operators;
 
 	bool canAddOrSubtract(Placeholder * rhs);
+	bool canAddOrSubtract(Placeholder * lhs, Placeholder * rhs);
 };
 
 #endif /* PLACEHOLDER_H_ */
