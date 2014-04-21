@@ -128,6 +128,13 @@ Number& Variable::operator/(Number& rhs) {
 			}
 		}
 	}
+	else if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
+		Number * numerator = &(rhs * *this);
+
+		return (*numerator / denominator->simplify());
+	}
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
@@ -138,6 +145,9 @@ Number& Variable::operator/(Number& rhs) {
 	return *result;
 }
 
+Number& Variable::clone() {
+	return *(new Variable(this->var));
+}
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to
 // being inherited from the Number class.

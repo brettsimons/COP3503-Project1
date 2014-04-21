@@ -28,8 +28,10 @@ public:
 	Number& operator*(Number& rhs);
 	Number& operator/(Number& rhs);
 	bool operator==(Number& rhs);
+
 	std::string toString();
 	Number& simplify();
+	Number& clone();
 
 	template <class T1>
 	std::vector<T1> getInnerGCD(Placeholder& innerEquation);

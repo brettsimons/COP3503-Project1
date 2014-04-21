@@ -30,6 +30,7 @@ public:
 
 	std::string toString();
 	Number& simplify();
+	Number& clone();
 
 	Number& getBase();
 	Number& getExponent();

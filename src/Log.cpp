@@ -124,7 +124,15 @@ Number& Log::operator/(Number& rhs) {
             Log * log = new Log(this->getArgument(), rhsCast->getArgument());
 			return log->simplify();
         }
-	} else {
+	}
+	else if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
+		Number * numerator = &(rhs * *this);
+
+		return (*numerator / denominator->simplify());
+	}
+	else {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Integer * reciprical = new Integer(1);
@@ -149,14 +157,34 @@ std::string Log::toString() {
 
 Number& Log::simplify() {
 	if (typeid(*argument) == typeid(Integer) && typeid(*base) == typeid(Integer)) {
-		Integer * argumentInt = dynamic_cast<Integer*>(argument);
 		Integer * baseInt = dynamic_cast<Integer*>(base);
+		Integer * argumentInt = dynamic_cast<Integer*>(argument);
+		Integer * tempHolder = NULL;
+
+		bool isReversed = false;
+
+		if (baseInt->getInt() > argumentInt->getInt()) {
+			isReversed = true;
+			tempHolder = new Integer(baseInt->getInt());
+			baseInt = argumentInt;
+			argumentInt = tempHolder;
+		}
 
 		if((int)(log10(argumentInt->getInt())/log10(baseInt->getInt())) == (log10(argumentInt->getInt())/log10(baseInt->getInt()))) {   //checks to see if the log operator reduces to an integer
 			int ans = log10(argumentInt->getInt())/log10(baseInt->getInt());
     		Integer *answer = new Integer(ans);
+
+			if (isReversed) {
+				Integer * one = new Integer(1);
+				Placeholder * ph = new Placeholder();
+				ph->getNumbers().push_back(one);
+				ph->getNumbers().push_back(answer);
+				ph->getOperators().push_back('/');
+				return *ph;
+			}
+
     		return *answer;
-		} else {
+		} else if (!isReversed) {
 			int n = 0;
 			int tempMax = 0;
 			for(int i = 1; i < argumentInt->getInt(); i++) {             //breaks down the log into different logs if possible
@@ -213,10 +241,13 @@ Number& Log::simplify() {
 				ops->push_back('+');
 				numbs->push_back(powMaxNum);
 				numbs->push_back(secondHalf);
-				ops->push_back('*'); //If there is a way to just have, for example, 2log2 instead of 2*log2 then do DAT.
+				ops->push_back('*');
 				Placeholder * placeholder2 = new Placeholder(*numbs, *ops);
-				return * placeholder2;
+				return *placeholder2;
 			}
+		}
+		else {
+			return *this;
 		}
 	}
 	else if (typeid(*argument) == typeid(Variable) && typeid(*base) == typeid(Variable)) {
@@ -239,6 +270,71 @@ Number& Log::simplify() {
 			}
 		}
 	}
+	else if (typeid(*argument) == typeid(Root) && typeid(*base) == typeid(Root)) {
+		Root * argumentCast = dynamic_cast<Root*>(argument);
+		Root * baseCast = dynamic_cast<Root*>(base);
+
+		if (typeid(argumentCast->getBase()) == typeid(Integer) && typeid(argumentCast->getRoot()) == typeid(Integer) && typeid(baseCast->getRoot()) == typeid(Integer) && typeid(baseCast->getBase()) == typeid(Integer)) {
+			Integer * baseBaseInt = dynamic_cast<Integer*>(&baseCast->getBase());
+			Integer * baseRootInt = dynamic_cast<Integer*>(&baseCast->getRoot());
+			Integer * argBaseInt = dynamic_cast<Integer*>(&argumentCast->getBase());
+			Integer * argRootInt = dynamic_cast<Integer*>(&argumentCast->getRoot());
+
+			double argumentVal = pow(argBaseInt->getInt(), 1 / (double)argRootInt->getInt());
+			double baseVal = pow(baseBaseInt->getInt(), 1 / (double)baseRootInt->getInt());
+
+			bool foundAns = false;
+			double result = 0;
+			int i = 1;
+			while (result < argumentVal) {
+				result = pow(baseVal, i);
+				if (result != argumentVal) {
+					i++;
+				}
+				else {
+					foundAns = true;
+				}
+			}
+
+			if (foundAns) {
+				return *(new Integer(i));
+			}
+		}
+	}
+	else if (typeid(*argument) == typeid(Integer) && typeid(*base) == typeid(Root)) {
+		Integer * argumentCast = dynamic_cast<Integer*>(argument);
+		Root * baseCast = dynamic_cast<Root*>(base);
+
+		if (typeid(baseCast->getRoot()) == typeid(Integer) && typeid(baseCast->getBase()) == typeid(Integer)) {
+			Integer * baseInt = dynamic_cast<Integer*>(&baseCast->getBase());
+			Integer * rootInt = dynamic_cast<Integer*>(&baseCast->getRoot());
+
+			double baseVal = pow(baseInt->getInt(), 1 / (double)rootInt->getInt());
+
+			bool foundAns = false;
+			int result = 0;
+			int i = 1;
+			while (result < argumentCast->getInt()) {
+				result = pow(baseVal, i);
+				if (result != argumentCast->getInt()) {
+					i++;
+				}
+				else {
+					foundAns = true;
+				}
+			}
+
+			if (foundAns) {
+				return *(new Integer(i));
+			}
+		}
+	}
+	else if (typeid(*argument) == typeid(Integer)) {
+		Integer * argumentInt = dynamic_cast<Integer*>(argument);
+		if (argumentInt->getInt() == 1) {
+			return *(new Integer(0));
+		}
+	}
 	return *this;
 }
 
@@ -248,6 +344,10 @@ Number& Log::getBase() {
 
 Number& Log::getArgument() {
     return *this->argument;
+}
+
+Number& Log::clone() {
+	return *(new Log(this->base->clone(), this->argument->clone()));
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to

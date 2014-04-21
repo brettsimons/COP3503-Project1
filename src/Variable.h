@@ -29,6 +29,7 @@ public:
 
 	std::string toString();
 	Number& simplify();
+	Number& clone();
 
 	std::string getVariable();
 

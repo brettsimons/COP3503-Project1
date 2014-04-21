@@ -23,6 +23,7 @@ class Number {
 		virtual Number& operator/(Number& rhs) = 0;
 		virtual bool operator==(Number& rhs) = 0;
 
+		virtual Number& clone() = 0;
 		virtual Number& simplify() = 0;
 		virtual std::string toString() = 0;
 

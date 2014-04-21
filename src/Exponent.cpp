@@ -119,45 +119,52 @@ Number& Exponent::operator*(Number& rhs) {
 }
 
 Number& Exponent::operator/(Number& rhs) {
-    if(typeid(rhs) == typeid(Exponent)) {
-    	Exponent * rhsCastExp = dynamic_cast<Exponent*>(&rhs);
+	if (typeid(rhs) == typeid(Exponent)) {
+		Exponent * rhsCastExp = dynamic_cast<Exponent*>(&rhs);
 
-        if(rhsCastExp->getBase() == *this->base){
-            if(typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
-            	std::vector<Number*> * numbers = new std::vector<Number*>();
-            	std::vector<char> * operators = new std::vector<char>();
-                numbers->push_back(this->exponent);
-                numbers->push_back(&rhsCastExp->getExponent());
-                operators->push_back('-');
-                Number * placeholder = new Placeholder(*numbers, *operators);
-                Number * expon = new Exponent(*base, *placeholder);
-                return expon->simplify();
-            }
-            else{
-                Number * times = &(rhsCastExp->getExponent() + *this->exponent);
-                Number * expon = new Exponent(*base, *times);
-                return expon->simplify();
-            }
-        }
-            Number * times = &(rhsCastExp->getExponent() - *this->exponent);
-            Number * expon = new Exponent(*base, *times);
-            return expon->simplify();
-           }
-        else {
-            if (typeid(rhs) == typeid(Placeholder)) {
-                return rhs / *this;
-                  }
+		if (rhsCastExp->getBase() == *this->base){
+			if (typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
+				std::vector<Number*> * numbers = new std::vector<Number*>();
+				std::vector<char> * operators = new std::vector<char>();
+				numbers->push_back(this->exponent);
+				numbers->push_back(&rhsCastExp->getExponent());
+				operators->push_back('-');
+				Number * placeholder = new Placeholder(*numbers, *operators);
+				Number * expon = new Exponent(*base, *placeholder);
+				return expon->simplify();
+			}
+			else{
+				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
+				Number * expon = new Exponent(*base, *times);
+				return expon->simplify();
+			}
+		}
+		Number * times = &(rhsCastExp->getExponent() - *this->exponent);
+		Number * expon = new Exponent(*base, *times);
+		return expon->simplify();
+	}
+	else if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
+		Number * numerator = &(rhs * *this);
 
-                else {
-                	std::vector<Number*> * numbers = new std::vector<Number*>();
-                	std::vector<char> * operators = new std::vector<char>();
-                    numbers->push_back(this);
-                    numbers->push_back(&rhs);
-                    operators->push_back('/');
-                    Number * placeholder = new Placeholder(*numbers, *operators);
-                    return *placeholder;
-                }
-        }
+		return (*numerator / denominator->simplify());
+	}
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs / *this;
+		}
+
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('/');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
+	}
 }
 
 std::string Exponent::toString() {
@@ -165,14 +172,85 @@ std::string Exponent::toString() {
 }
 
 Number& Exponent::simplify() {
-    if ((typeid(*base) == typeid(Integer)) &&  (typeid(*exponent) == typeid(Integer))) {
+	if (typeid(*exponent) == typeid(Placeholder)) {
+		Placeholder * expCast = dynamic_cast<Placeholder*>(exponent);
+		bool isNeg = false;
+		for (int i = 0; i < expCast->getNumbers().size(); i++) {
+			if (typeid(*expCast->getNumbers()[i]) == typeid(Integer)) {
+				Integer * tempInt = dynamic_cast<Integer*>(expCast->getNumbers()[i]);
+				if (tempInt->getInt() < 0) {
+					isNeg = true;
+					expCast->getNumbers()[i] = new Integer(tempInt->getInt() * -1);
+					delete tempInt;
+				}
+			}
+		}
+
+		if (isNeg) {
+			Integer * one = new Integer(1);
+
+			Placeholder * toReturn = new Placeholder();
+			toReturn->getNumbers().push_back(one);
+			toReturn->getNumbers().push_back(&this->simplify());
+			toReturn->getOperators().push_back('/');
+			return *toReturn;
+		}
+	}
+    else if ((typeid(*base) == typeid(Integer)) &&  (typeid(*exponent) == typeid(Integer))) {
     	Integer * baseCast = dynamic_cast<Integer*>(base);
     	Integer * exponentCast = dynamic_cast<Integer*>(exponent);
-        int powr = pow(baseCast->getInt(), exponentCast->getInt());
-        Number *num = new Integer(powr);
-        return *num;
-    }
+
+		if (exponentCast->getInt() >= 0) {
+			int powr = pow(baseCast->getInt(), exponentCast->getInt());
+			Number *num = new Integer(powr);
+			return *num;
+		}
+		else {
+			this->exponent = new Integer(exponentCast->getInt() * -1);
+			delete exponentCast;
+
+			Integer * one = new Integer(1);
+
+			Placeholder * toReturn = new Placeholder();
+			toReturn->getNumbers().push_back(one);
+			toReturn->getNumbers().push_back(&this->simplify());
+			toReturn->getOperators().push_back('/');
+			return *toReturn;
+		}
+	}
+	else if ((typeid(*base) == typeid(Variable)) && (typeid(*exponent) == typeid(Integer))) {
+		Integer * exponentCast = dynamic_cast<Integer*>(exponent);
+		if (exponentCast->getInt() == 0) {
+			return *(new Integer(1));
+		}
+		else if (exponentCast->getInt() == 1) {
+			return *base;
+		}
+		else if (exponentCast->getInt() < 0) {
+			this->exponent = new Integer(exponentCast->getInt() * -1);
+			delete exponentCast;
+
+			Integer * one = new Integer(1);
+
+			Placeholder * toReturn = new Placeholder();
+			toReturn->getNumbers().push_back(one);
+			toReturn->getNumbers().push_back(&this->simplify());
+			toReturn->getOperators().push_back('/');
+			return *toReturn;
+		}
+	}
+	else if (typeid(*base) == typeid(Root)) {
+		Root * baseCast = dynamic_cast<Root*>(base);
+
+		if (baseCast->getRoot() == *this->exponent) {
+			return baseCast->getBase();
+		}
+	}
     return *this;
+}
+
+Number& Exponent::clone() {
+	return *(new Exponent(this->base->clone(), this->exponent->clone()));
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to

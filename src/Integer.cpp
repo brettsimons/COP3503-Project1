@@ -104,7 +104,8 @@ Number& Integer::operator/(Number& rhs) {
 
 			Number * integer = new Integer(answer);
 			return *integer;
-		} else {
+		}
+		else {
 			int gcdResult = gcd(this->intContainer, rhsCast->intContainer);
 			int numerator = this->intContainer / gcdResult;
 			int denominator = rhsCast->intContainer / gcdResult;
@@ -119,7 +120,16 @@ Number& Integer::operator/(Number& rhs) {
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
-	} else {
+	}
+	else if (typeid(rhs) == typeid(Root)) {
+		Root * rhsCast = dynamic_cast<Root*>(&rhs);
+		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
+		Number * numerator = &(rhs * *this);
+		Number * result = &(*numerator / denominator->simplify());
+
+		return *result;
+	}
+	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs);
 
@@ -136,11 +146,11 @@ Number& Integer::operator/(Number& rhs) {
 
 			if (canSimplify) {
 				for (int i = 0; i < placeholder->getNumbers().size(); i++) {
-					if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '*') || (i == 0 && placeholder->getOperators()[0] == '*'))) {
+					if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i - 1] == '*') || (i == 0 && placeholder->getOperators()[0] == '*'))) {
 						Number * intAnswer = &(*this / *placeholder->getNumbers()[i]);
 
 						if (typeid(*intAnswer) == typeid(Integer)) {
-							placeholder->getOperators().erase(placeholder->getOperators().begin() + (i-1));
+							placeholder->getOperators().erase(placeholder->getOperators().begin() + (i - 1));
 							placeholder->getNumbers().erase(placeholder->getNumbers().begin() + i);
 							placeholder->getNumbers().insert(placeholder->getNumbers().begin(), intAnswer);
 							placeholder->getOperators().insert(placeholder->getOperators().begin(), '/');
@@ -155,7 +165,7 @@ Number& Integer::operator/(Number& rhs) {
 						}
 					}
 
-					else if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i-1] == '/') || (i == 0 && placeholder->getOperators()[0] == '/'))) {
+					else if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i - 1] == '/') || (i == 0 && placeholder->getOperators()[0] == '/'))) {
 						Number * answer = &(*this * *placeholder->getNumbers()[i]);
 						return *answer;
 					}
@@ -173,6 +183,10 @@ Number& Integer::operator/(Number& rhs) {
 			return *placeholder;
 		}
 	}
+}
+
+Number& Integer::clone() {
+	return *(new Integer(this->intContainer));
 }
 
 // **NOTICE**: In order to avoid circular referencing, this method must be copy and pasted as opposed to

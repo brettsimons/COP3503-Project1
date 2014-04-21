@@ -43,9 +43,9 @@ int main() {
 						while((start_pos = innerOption.find("ans(", start_pos)) != std::string::npos) {
 							string answerNum = innerOption;
 							location = innerOption.find(")", start_pos);
-							answerNum = answerNum.substr(start_pos + 4, location - start_pos + 4);
-							int answer = atoi(answerNum.c_str());
-							innerOption.replace(start_pos, 4, previousAnswers.at(answer));
+							answerNum = answerNum.substr(start_pos + 4, location - start_pos - 4);
+							int answer = previousAnswers.size() - atoi(answerNum.c_str());
+							innerOption = innerOption.substr(0, start_pos) + previousAnswers.at(answer) + innerOption.substr(location + 1, innerOption.length() - location - 1);
 							start_pos += previousAnswers.at(answer).length();
 						}
 					}
