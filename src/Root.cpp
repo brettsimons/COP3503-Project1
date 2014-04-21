@@ -246,13 +246,21 @@ Number& Root::operator+(Number& rhs) {
 			return *result;
 		}
 	}
-	std::vector<Number*> * numbers = new std::vector<Number*>();
-	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
-	operators->push_back('-');
-	Number * result = new Placeholder(*numbers, *operators);
-	return *result;
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs + *this;
+		}
+
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('+');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Root::operator-(Number& rhs) {
@@ -262,13 +270,22 @@ Number& Root::operator-(Number& rhs) {
 			return *integer;
 		}
 	}
-	std::vector<Number*> * numbers = new std::vector<Number*>();
-	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
-	operators->push_back('-');
-	Number * result = new Placeholder(*numbers, *operators);
-	return *result;
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			Integer * neg = new Integer(-1);
+			return (*neg * rhs) + *this;
+		}
+
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('-');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Root::operator*(Number& rhs) {
@@ -280,13 +297,21 @@ Number& Root::operator*(Number& rhs) {
 				return answer->simplify();
 		}
 	}
-	std::vector<Number*> * numbers = new std::vector<Number*>();
-	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
-	operators->push_back('*');
-	Number * result = new Placeholder(*numbers, *operators);
-	return *result;
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			return rhs * *this;
+		}
+
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('*');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Root::operator/(Number& rhs) {
@@ -304,14 +329,22 @@ Number& Root::operator/(Number& rhs) {
 			return (*numerator / denominator->simplify());
 		}
 	}
+	else {
+		if (typeid(rhs) == typeid(Placeholder)) {
+			Integer * one = new Integer(1);
+			return *one / (rhs / *this);
+		}
 
-	std::vector<Number*> * numbers = new std::vector<Number*>();
-	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
-	operators->push_back('/');
-	Number * result = new Placeholder(*numbers, *operators);
-	return *result;
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('/');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
+	}
 }
 
 Number& Root::clone() {

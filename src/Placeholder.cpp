@@ -860,7 +860,7 @@ Number& Placeholder::operator/(Number& rhs) {
 		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
 		Number * numerator = &(rhs * *this);
 
-		return (*numerator / *denominator);
+		return (*numerator / denominator->simplify());
 	} else if (typeid(rhs) == typeid(Placeholder)) {
 		Integer * one = new Integer(1);
 		Number * result = &(*one / rhs);

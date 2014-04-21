@@ -152,7 +152,8 @@ Number& Exponent::operator/(Number& rhs) {
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs / *this;
+			Integer * one = new Integer(1);
+			return *one / (rhs / *this);
 		}
 
 		else {
