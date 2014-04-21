@@ -100,12 +100,30 @@ Number& Exponent::operator*(Number& rhs) {
 				return expon->simplify();
 			}
 		}
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('*');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			return rhs * *this;
 		}
+		else if (typeid(rhs) == typeid(Root)) {
+			if (typeid(*this->exponent) == typeid(Placeholder)) {
+				Root * rhsCast = dynamic_cast<Root*>(&rhs);
+				Placeholder * expCast = dynamic_cast<Placeholder*>(this->exponent);
 
+				if (expCast->getOperators().at(0) == '/' && typeid(expCast->getNumbers().at(1)) == typeid(rhsCast->getRoot())) {
+
+				}
+			}
+		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
@@ -196,6 +214,178 @@ Number& Exponent::simplify() {
 			toReturn->getOperators().push_back('/');
 			return *toReturn;
 		}
+		else {
+			Placeholder * temp = new Placeholder();
+			Placeholder * result = new Placeholder();
+
+			for (int i = 0; i < expCast->getOperators().size(); i++) {
+				if (expCast->getOperators().at(i) == '+') {
+					if (temp->getNumbers().size() > 0) {
+						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								Exponent * exp1 = new Exponent(*this->base, *temp);
+								temp = new Placeholder();
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+						}
+						else {
+							Exponent * exp1 = new Exponent(*this->base, *temp);
+							temp = new Placeholder();
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('*');
+						}
+					}
+					else {
+						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+						}
+						else {
+							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('*');
+						}
+					}
+				}
+				else if (expCast->getOperators().at(i) == '-') {
+					if (temp->getNumbers().size() > 0) {
+						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								Exponent * exp1 = new Exponent(*this->base, *temp);
+								temp = new Placeholder();
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('/');
+							}
+						}
+						else {
+							Exponent * exp1 = new Exponent(*this->base, *temp);
+							temp = new Placeholder();
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('/');
+						}
+					}
+					else {
+						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('/');
+							}
+						}
+						else {
+							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('/');
+						}
+					}
+				}
+				else if (i < expCast->getOperators().size()) {
+					if (expCast->getOperators().size() > 0 && expCast->getOperators()[i] == '/') {
+						Root * innerExponent = new Root(*this->base, *expCast->getNumbers()[i + 1]);
+						Exponent * exp1 = new Exponent(innerExponent->simplify(), *expCast->getNumbers()[i]);
+						if (expCast->getOperators().at(i + 1) == '*' || expCast->getOperators().at(i + 1) == '/') {
+							temp->getNumbers().push_back(expCast->getNumbers().at(i));
+							temp->getOperators().push_back(expCast->getOperators().at(i + 1));
+						}
+						else if (expCast->getOperators().at(i + 1) == '+') {
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('*');
+						}
+						else if (expCast->getOperators().at(i + 1) == '-') {
+							result->getNumbers().push_back(exp1);
+							result->getOperators().push_back('/');
+						}
+					}
+					else {
+						temp->getNumbers().push_back(expCast->getNumbers().at(i));
+						temp->getOperators().push_back(expCast->getOperators().at(i));
+					}
+				}
+
+				if (i + 1 == expCast->getOperators().size()) {
+					Exponent * exp1 = NULL;
+
+					if (temp->getNumbers().size() > 0) {
+						if (typeid(*expCast->getNumbers().at(i + 1)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i + 1));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
+
+								exp1 = new Exponent(*this->base, *temp);
+							}
+						}
+						else {
+							temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
+
+							exp1 = new Exponent(*this->base, *temp);
+						}
+					}
+					else {
+						if (typeid(*expCast->getNumbers().at(i + 1)) == typeid(Placeholder)) {
+							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i + 1));
+							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
+								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								result->getNumbers().push_back(exp1);
+								result->getOperators().push_back('*');
+							}
+							else {
+								exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
+
+								result->getNumbers().push_back(exp1);
+							}
+						}
+						else {
+							exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
+
+							result->getNumbers().push_back(exp1);
+						}
+					}
+				}
+			}
+
+			if (result->getNumbers().size() > 0) {
+				return *result;
+			}
+		}
 	}
     else if ((typeid(*base) == typeid(Integer)) &&  (typeid(*exponent) == typeid(Integer))) {
     	Integer * baseCast = dynamic_cast<Integer*>(base);
@@ -245,6 +435,13 @@ Number& Exponent::simplify() {
 
 		if (baseCast->getRoot() == *this->exponent) {
 			return baseCast->getBase();
+		}
+		else if (typeid(*this->exponent) == typeid(Integer) && typeid(baseCast->getBase()) == typeid(Integer)) {
+			Number * innerRoot = &((new Exponent(baseCast->getBase(), *this->exponent))->simplify());
+			Integer * one = new Integer(1);
+			this->exponent = one;
+			Root * result = new Root(*innerRoot, baseCast->getRoot());
+			return *result;
 		}
 	}
     return *this;

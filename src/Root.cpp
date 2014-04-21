@@ -296,6 +296,15 @@ Number& Root::operator*(Number& rhs) {
 				Root * answer = new Root(*innards, *this->root);
 				return answer->simplify();
 		}
+		else {
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(this);
+			numbers->push_back(&rhs);
+			operators->push_back('*');
+			Number * placeholder = new Placeholder(*numbers, *operators);
+			return *placeholder;
+		}
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
