@@ -198,13 +198,13 @@ string Calculator::SimplifyExpression(string equation) {
 Number& Calculator::PerformCalculations() {
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '*') {
-			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
+			Number * result = &(*numbers->at(i) * *numbers->at(i + 1)).simplify();
 			numbers->at(i) = &result->simplify();
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
 			i--;
 		} else if (operators->at(i) == '/') {
-			Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
+			Number * result = &(*numbers->at(i) / *numbers->at(i + 1)).simplify();
 			numbers->at(i) = &result->simplify();
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
@@ -281,7 +281,7 @@ Number& Calculator::PerformCalculations() {
 		Number * placeholder = new Placeholder(*this->numbers, *this->operators);
 		return *placeholder;
 	} else {
-		numbers->at(0) = &(numbers->at(0)->simplify());
+		//numbers->at(0) = &(numbers->at(0)->simplify());
 		return *numbers->at(0);
 	}
 }

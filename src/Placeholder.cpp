@@ -680,7 +680,14 @@ Number& Placeholder::operator*(Number& rhs) {
 				multiplication = &(*lhsReplacement * *rhsNumberList->at(i));
 			}
 			else {
-				multiplication = &(*this * *rhsNumberList->at(i));
+				Number * multTemp = &this->clone();
+				if (i != 0 && rhsOperatorList->at(i - 1) == '*') {
+					multiplication = &(*multTemp * *rhsNumberList->at(i));
+				} else if (i != 0 && rhsOperatorList->at(i - 1) == '/') {
+					multiplication = &(*multTemp / *rhsNumberList->at(i));
+				} else {
+					multiplication = &(*multTemp * *rhsNumberList->at(i));
+				}
 			}
 
 			if (typeid(*multiplication) == typeid(Placeholder)) {
@@ -737,14 +744,41 @@ Number& Placeholder::operator*(Number& rhs) {
 						if (typeid(*this->numbers->at(x)) == typeid(rhs)) {
 							typeMatchFound = true;
 							this->numbers->at(x) = &(*this->numbers->at(x) * rhs);
+							typeMatchFound = true;
+							return *this;
 						}
 					}
 
 					if (!typeMatchFound) {
 						for (int x = 0; x <= numberOfMoreMult; x++) {
-							if ((typeid(*this->numbers->at(x)) == typeid(Root) && typeid(rhs) == typeid(Exponent)) || (typeid(*this->numbers->at(x)) == typeid(Exponent) && typeid(rhs) == typeid(Root))) {
-								this->numbers->at(x) == &(*this->numbers->at(x) * rhs);
-								typeMatchFound = true;
+							if (typeid(*this->numbers->at(x)) == typeid(Root) && typeid(rhs) == typeid(Exponent)) {
+								Root * numberCast = dynamic_cast<Root*>(this->numbers->at(x));
+								Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
+
+								if (numberCast->getRoot() == rhsCast->getExponent()) {
+									this->numbers->at(x) == &(*this->numbers->at(x) * rhs);
+									typeMatchFound = true;
+									return *this;
+								}
+								else {
+									this->numbers->push_back(&rhs);
+									this->operators->push_back('*');
+									return *this;
+								}
+							}
+							else if (typeid(*this->numbers->at(x)) == typeid(Exponent) && typeid(rhs) == typeid(Root)) {
+								Exponent * numberCast = dynamic_cast<Exponent*>(this->numbers->at(x));
+								Root * rhsCast = dynamic_cast<Root*>(&rhs);
+
+								if (numberCast->getExponent() == rhsCast->getRoot()) {
+									this->numbers->at(x) == &(*this->numbers->at(x) * rhs);
+									typeMatchFound = true;
+								}
+								else {
+									this->numbers->push_back(&rhs);
+									this->operators->push_back('*');
+									return *this;
+								}
 							}
 						}
 
@@ -785,11 +819,18 @@ Number& Placeholder::operator/(Number& rhs) {
 
 		std::vector<int> * intArray = new std::vector<int>();
 		int indexOfDivision = -1;
+		int arrayIndex = 0;
+		intArray->push_back(-1);
 
 		for (int i = 0; i < this->operators->size(); i++) {
-			if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
+			if (typeid(*this->numbers->at(i)) == typeid(Integer) && (((i == 0 || i < this->operators->size()) && (this->operators->at(i) == '*' || this->operators->at(i) == '/')) || (i > 0 && this->operators->at(i - 1) == '*' || this->operators->at(i - 1) == '/'))) {
 				Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
-				intArray->push_back(tempInt->getInt());
+				if (intArray->at(arrayIndex) < tempInt->getInt()) {
+					intArray->at(arrayIndex) = tempInt->getInt();
+				}
+			} else {
+				arrayIndex++;
+				intArray->push_back(-1);
 			}
 
 			if (i == this->operators->size() - 1) {
@@ -848,12 +889,38 @@ Number& Placeholder::operator/(Number& rhs) {
 				return *this;
 			}
 		} else {
-			Placeholder * result = new Placeholder();
-			result->getNumbers().push_back(this);
-			result->getNumbers().push_back(&rhs);
-			result->getOperators().push_back('/');
+			int gcdResult = gcd(*intArray);
+			Integer * gcdInteger = new Integer(gcdResult);
 
-			return *result;
+			if (gcdResult > 1) {
+				arrayIndex = 0;
+
+				for (int i = 0; i < this->operators->size(); i++) {
+					if (typeid(*this->numbers->at(i)) == typeid(Integer) && (((i == 0 || i < this->operators->size()) && (this->operators->at(i) == '*' || this->operators->at(i) == '/')) || (i > 0 && this->operators->at(i - 1) == '*' || this->operators->at(i - 1) == '/'))) {
+						Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
+						if (intArray->at(arrayIndex) == tempInt->getInt()) {
+							this->numbers->at(i) = &(*tempInt / *gcdInteger);
+						}
+					} else {
+						arrayIndex++;
+					}
+				}
+
+				Number * denominator = &(rhs / *gcdInteger);
+
+				Placeholder * toReturn = new Placeholder();
+				toReturn->getNumbers().push_back(this);
+				toReturn->getNumbers().push_back(denominator);
+				toReturn->getOperators().push_back('/');
+				return *toReturn;
+			} else {
+				Placeholder * result = new Placeholder();
+				result->getNumbers().push_back(this);
+				result->getNumbers().push_back(&rhs);
+				result->getOperators().push_back('/');
+
+				return *result;
+			}
 		}
 	} else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
@@ -861,13 +928,51 @@ Number& Placeholder::operator/(Number& rhs) {
 		Number * numerator = &(rhs * *this);
 
 		return (*numerator / denominator->simplify());
-	} else if (typeid(rhs) == typeid(Placeholder)) {
-		Integer * one = new Integer(1);
-		Number * result = &(*one / rhs);
-		return *result;
-	}
+	} else if (typeid(rhs) == typeid(Exponent)) {
+		Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
 
-	return *this;
+		for (int i = 0; i < this->numbers->size(); i++) {
+			if (typeid(*this->numbers->at(i)) == typeid(Exponent)) {
+				Exponent * lhsCast = dynamic_cast<Exponent*>(this->numbers->at(i));
+
+				if (lhsCast->getBase() == rhsCast->getBase()) {
+					Exponent * toReturn = new Exponent(lhsCast->getBase(), lhsCast->getExponent() - rhsCast->getExponent());
+					this->numbers->at(i) = toReturn;
+					return *this;
+				}
+			}
+		}
+	} else if (typeid(rhs) == typeid(Placeholder)) {
+		Placeholder * rhsCast = dynamic_cast<Placeholder*>(&rhs);
+		bool canSimplify = true;
+
+		for (int i = 0; i < rhsCast->getOperators().size(); i++) {
+			if (rhsCast->getOperators().at(i) == '+' || rhsCast->getOperators().at(i) == '-') {
+				canSimplify = false;
+				break;
+			}
+		}
+
+		if (canSimplify) {
+			Integer * one = new Integer(1);
+			Number * result = &this->clone();
+
+			for (int i =  0; i < rhsCast->getNumbers().size(); i++) {
+				Number * resultTemp = &result->clone();
+				Number * divideBy = &(*one / *rhsCast->getNumbers().at(i));
+				result = &(*resultTemp * *divideBy);
+			}
+
+			return result->simplify();
+		}
+	}
+	
+	Placeholder * result = new Placeholder();
+	result->getNumbers().push_back(this);
+	result->getNumbers().push_back(&rhs);
+	result->getOperators().push_back('/');
+
+	return *result;
 }
 
 std::string Placeholder::toString() {
@@ -881,11 +986,11 @@ std::string Placeholder::toString() {
 					toReturn = toReturn.substr(0, toReturn.length() - 1);
 					i++;
 				}
-				else if (i != 0 && this->operators->at(i - 1) == '/' && this->operators->at(i) != '*') {
+				else if (i != 0 && this->operators->at(i - 1) == '/' && ((i < this->operators->size() && this->operators->at(i) != '*') || i == this->operators->size())) {
 					toReturn = toReturn.substr(0, toReturn.length() - 1);
 					i++;
 				}
-				else if (i != 0 && this->operators->at(i - 1) == '/' && this->operators->at(i) == '*') {
+				else if (i != 0 && this->operators->at(i - 1) == '/' && i < this->operators->size() && this->operators->at(i) == '*') {
 					i++;
 				}
 			} else if (integer->getInt() == 0) {
@@ -936,18 +1041,51 @@ Number& Placeholder::clone() {
 }
 
 Number& Placeholder::simplify() {
+	for (int i = 0; i < this->numbers->size(); i++) {
+		if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
+			Integer * integer = dynamic_cast<Integer*>(this->numbers->at(i));
+			if (integer->getInt() == 1 && this->operators->size() > 0) {
+				if (i != 0 && this->operators->at(i - 1) == '*') {
+					this->numbers->erase(this->numbers->begin() + i);
+					this->operators->erase(this->operators->begin() + i - 1);
+					i++;
+				}
+				else if (i != 0 && this->operators->at(i - 1) == '/' && ((i < this->operators->size() && this->operators->at(i) != '*') || i == this->operators->size())) {
+					this->numbers->erase(this->numbers->begin() + i);
+					this->operators->erase(this->operators->begin() + i - 1);
+					i++;
+				}
+				else if (i != 0 && this->operators->at(i - 1) == '/' && i < this->operators->size() && this->operators->at(i) == '*') {
+					i++;
+				}
+			} else if (integer->getInt() == 0) {
+				int highExtrenum = this->operators->size() - 1;
+				for(int x = i; x < this->operators->size(); x++) {
+					if (this->operators->at(x) == '*' || this->operators->at(x) == '/') {
+						highExtrenum = x+2;
+					}
+				}
+				
+				this->numbers->erase(this->numbers->begin() + i, this->numbers->begin() + highExtrenum);
+				this->operators->erase(this->operators->begin() + i - 1, this->operators->begin() + highExtrenum);
+				
+				i = highExtrenum;
+			}
+		}
+	}
+
 	if (this->numbers->size() == 1) {
 		return this->numbers->at(0)->simplify();
 	} else {
 		for (int i = 0; i < operators->size(); i++) {
 			if (operators->at(i) == '*') {
-				Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
+				Number * result = &(numbers->at(i)->simplify() * numbers->at(i + 1)->simplify());
 				numbers->at(i) = result;
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
 				i--;
-			} else if (operators->at(i) == '/') {
-				Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
+ 			} else if (operators->at(i) == '/') {
+				Number * result = &(numbers->at(i)->simplify() / numbers->at(i + 1)->simplify());
 				numbers->at(i) = result;
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
@@ -962,10 +1100,10 @@ Number& Placeholder::simplify() {
 					int x = 0;
 					for (x = i+1; x < numbers->size(); x++) {
 						if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '+') {
-							result = &(*numbers->at(i) + *numbers->at(x));
+							result = &(numbers->at(i)->simplify() + numbers->at(x)->simplify());
 						}
 						else if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '-') {
-							result = &(*numbers->at(i) - *numbers->at(x));
+							result = &(numbers->at(i)->simplify() - numbers->at(x)->simplify());
 						}
 					}
 					x--;
@@ -987,7 +1125,7 @@ Number& Placeholder::simplify() {
 					int x = 0;
 					for (x = i+1; x < numbers->size(); x++) {
 						if (typeid(*numbers->at(i)) == typeid(*numbers->at(x))) {
-							result = &(*numbers->at(i) - *numbers->at(x));
+							result = &(numbers->at(i)->simplify() - numbers->at(x)->simplify());
 						}
 					}
 					x--;
@@ -997,7 +1135,7 @@ Number& Placeholder::simplify() {
 						operators->erase(operators->begin() + x - 1);
 					}
 				} else {
-					Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+					Number * result = &(numbers->at(i)->simplify() - numbers->at(i + 1)->simplify());
 					numbers->at(i) = result;
 					numbers->erase(numbers->begin() + i + 1);
 					operators->erase(operators->begin() + i);

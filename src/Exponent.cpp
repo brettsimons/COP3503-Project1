@@ -85,14 +85,9 @@ Number& Exponent::operator*(Number& rhs) {
 
 		if(rhsCastExp->getBase() == *this->base){
 			if(typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
-				std::vector<Number*> * numbers = new std::vector<Number*>();
-				std::vector<char> * operators = new std::vector<char>();
-				numbers->push_back(this->exponent);
-				numbers->push_back(&rhsCastExp->getExponent());
-				operators->push_back('+');
-				Number * placeholder = new Placeholder(*numbers, *operators);
-				Number * expon = new Exponent(*base, *placeholder);
-				return expon->simplify();
+				Number * newExp = &(*this->exponent + rhsCastExp->getExponent());
+				Number * expon = new Exponent(*base, *newExp);
+				return *expon;
 			}
 			else{
 				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
@@ -124,6 +119,10 @@ Number& Exponent::operator*(Number& rhs) {
 				}
 			}
 		}
+		else if (typeid(rhs) == typeid(this->base)) {
+			this->exponent = &(*this->exponent + *(new Integer(1)));
+			return *this;
+		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
@@ -151,13 +150,13 @@ Number& Exponent::operator/(Number& rhs) {
 				Number * expon = new Exponent(*base, *placeholder);
 				return expon->simplify();
 			}
-			else{
-				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
+			else {
+				Number * times = &(*this->exponent - rhsCastExp->getExponent());
 				Number * expon = new Exponent(*base, *times);
 				return expon->simplify();
 			}
 		}
-		Number * times = &(rhsCastExp->getExponent() - *this->exponent);
+		Number * times = &(*this->exponent - rhsCastExp->getExponent());
 		Number * expon = new Exponent(*base, *times);
 		return expon->simplify();
 	}
@@ -167,6 +166,10 @@ Number& Exponent::operator/(Number& rhs) {
 		Number * numerator = &(rhs * *this);
 
 		return (*numerator / denominator->simplify());
+	}
+	else if (typeid(rhs) == typeid(this->base)) {
+		this->exponent = &(*this->exponent - *(new Integer(1)));
+		return *this;
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
@@ -226,20 +229,20 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								Exponent * exp1 = new Exponent(*this->base, *temp);
 								temp = new Placeholder();
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 						}
 						else {
 							Exponent * exp1 = new Exponent(*this->base, *temp);
 							temp = new Placeholder();
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('*');
 						}
 					}
@@ -249,18 +252,18 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 						}
 						else {
 							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('*');
 						}
 					}
@@ -272,20 +275,20 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								Exponent * exp1 = new Exponent(*this->base, *temp);
 								temp = new Placeholder();
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('/');
 							}
 						}
 						else {
 							Exponent * exp1 = new Exponent(*this->base, *temp);
 							temp = new Placeholder();
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('/');
 						}
 					}
@@ -295,18 +298,18 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('/');
 							}
 						}
 						else {
 							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('/');
 						}
 					}
@@ -320,11 +323,11 @@ Number& Exponent::simplify() {
 							temp->getOperators().push_back(expCast->getOperators().at(i + 1));
 						}
 						else if (expCast->getOperators().at(i + 1) == '+') {
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('*');
 						}
 						else if (expCast->getOperators().at(i + 1) == '-') {
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('/');
 						}
 					}
@@ -343,19 +346,23 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
 
 								exp1 = new Exponent(*this->base, *temp);
+
+								result->getNumbers().push_back(&exp1->simplify());
 							}
 						}
 						else {
 							temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
 
 							exp1 = new Exponent(*this->base, *temp);
+
+							result->getNumbers().push_back(&exp1->simplify());
 						}
 					}
 					else {
@@ -364,19 +371,19 @@ Number& Exponent::simplify() {
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
 								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
 								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
 								exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
 
-								result->getNumbers().push_back(exp1);
+								result->getNumbers().push_back(&exp1->simplify());
 							}
 						}
 						else {
 							exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
 
-							result->getNumbers().push_back(exp1);
+							result->getNumbers().push_back(&exp1->simplify());
 						}
 					}
 				}
@@ -441,7 +448,7 @@ Number& Exponent::simplify() {
 			Integer * one = new Integer(1);
 			this->exponent = one;
 			Root * result = new Root(*innerRoot, baseCast->getRoot());
-			return *result;
+			return result->simplify();
 		}
 	}
     return *this;

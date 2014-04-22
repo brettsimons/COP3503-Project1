@@ -84,16 +84,27 @@ Number& Integer::operator*(Number& rhs) {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			return rhs * *this;
 		}
+		else if (typeid(rhs) == typeid(Exponent)) {
+			Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
 
-		else {
-			std::vector<Number*> * numbers = new std::vector<Number*>();
-			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
-			operators->push_back('*');
-			Number * placeholder = new Placeholder(*numbers, *operators);
-			return *placeholder;
+			if (typeid(rhsCast->getBase()) == typeid(Integer)) {
+				Integer * baseInt = dynamic_cast<Integer*>(&rhsCast->getBase());
+
+				if (baseInt->getInt() == this->intContainer) {
+					Number * newExp = &(rhsCast->getExponent() + *(new Integer(1)));
+					Number * result = new Exponent(rhsCast->getBase(), *newExp);
+					return *result;
+				}
+			}
 		}
+
+		std::vector<Number*> * numbers = new std::vector<Number*>();
+		std::vector<char> * operators = new std::vector<char>();
+		numbers->push_back(this);
+		numbers->push_back(&rhs);
+		operators->push_back('*');
+		Number * placeholder = new Placeholder(*numbers, *operators);
+		return *placeholder;
 	}
 }
 
@@ -172,17 +183,28 @@ Number& Integer::operator/(Number& rhs) {
 				}
 			}
 		}
+		else if (typeid(rhs) == typeid(Exponent)) {
+			Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
 
-		else {
-			std::vector<Number*> * numbers = new std::vector<Number*>();
-			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
-			operators->push_back('/');
-			Number * placeholder = new Placeholder(*numbers, *operators);
-			return *placeholder;
+			if (typeid(rhsCast->getBase()) == typeid(Integer)) {
+				Integer * baseInt = dynamic_cast<Integer*>(&rhsCast->getBase());
+
+				if (baseInt->getInt() == this->intContainer) {
+					Number * newExp = &(*(new Integer(1)) - rhsCast->getExponent());
+					Number * result = new Exponent(rhsCast->getBase(), *newExp);
+					return *result;
+				}
+			}
 		}
 	}
+
+	std::vector<Number*> * numbers = new std::vector<Number*>();
+	std::vector<char> * operators = new std::vector<char>();
+	numbers->push_back(this);
+	numbers->push_back(&rhs);
+	operators->push_back('/');
+	Number * placeholder = new Placeholder(*numbers, *operators);
+	return *placeholder;
 }
 
 Number& Integer::clone() {

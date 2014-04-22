@@ -292,9 +292,13 @@ Number& Root::operator*(Number& rhs) {
 	if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		if (rhsCast->getRoot() == *this->root) {
-				Number * innards = &(rhsCast->getBase() * *this->base);
-				Root * answer = new Root(*innards, *this->root);
-				return answer->simplify();
+			if (rhsCast->getBase() == *this->base) {
+				return *this->base;
+			}
+
+			Number * innards = &(rhsCast->getBase() * *this->base);
+			Root * answer = new Root(*innards, *this->root);
+			return answer->simplify();
 		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
