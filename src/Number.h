@@ -27,8 +27,6 @@ class Number {
 		virtual Number& simplify() = 0;
 		virtual std::string toString() = 0;
 
-		template<class T1, class T2>
-		std::string lcm(T1 denom1, T2 denom2);
 		int gcd(int num1, int num2);
 		int gcd(std::vector<int>& numList);
 		std::vector<int> primeFactors(int n);

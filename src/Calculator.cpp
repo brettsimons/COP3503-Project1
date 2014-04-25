@@ -17,7 +17,15 @@ Calculator::Calculator() {
 }
 
 Calculator::~Calculator() {
-	// TODO Auto-generated destructor stub
+	for (int i = 0; i < this->numbers->size(); i++) {
+		delete this->numbers->at(i);
+	}
+
+	this->numbers->clear();
+	this->operators->clear();
+
+	delete this->numbers;
+	delete this->operators;
 }
 
 string Calculator::SimplifyExpression(string equation) {
@@ -185,12 +193,10 @@ string Calculator::SimplifyExpression(string equation) {
 	}
 
 	Number * result = &(PerformCalculations());
+
 	string stringResult = "";
-	try {
-		stringResult = result->toString();
-	} catch (exception e) {
-		cout << e.what();
-	}
+	stringResult = result->toString();
+
 	delete result;
 	return stringResult;
 }
@@ -198,14 +204,24 @@ string Calculator::SimplifyExpression(string equation) {
 Number& Calculator::PerformCalculations() {
 	for (int i = 0; i < operators->size(); i++) {
 		if (operators->at(i) == '*') {
-			Number * result = &(*numbers->at(i) * *numbers->at(i + 1)).simplify();
-			numbers->at(i) = &result->simplify();
+			Number * result = &(*numbers->at(i) * *numbers->at(i + 1));
+			Number * simplified = &result->simplify();
+			delete numbers->at(i);
+			delete numbers->at(i + 1);
+			delete result;
+			numbers->at(i) = &simplified->simplify();
+			delete simplified;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
 			i--;
 		} else if (operators->at(i) == '/') {
-			Number * result = &(*numbers->at(i) / *numbers->at(i + 1)).simplify();
-			numbers->at(i) = &result->simplify();
+			Number * result = &(*numbers->at(i) / *numbers->at(i + 1));
+			Number * simplified = &result->simplify();
+			delete numbers->at(i);
+			delete numbers->at(i + 1);
+			delete result;
+			numbers->at(i) = &simplified->simplify();
+			delete simplified;
 			numbers->erase(numbers->begin() + i + 1);
 			operators->erase(operators->begin() + i);
 			i--;
@@ -220,27 +236,38 @@ Number& Calculator::PerformCalculations() {
 				for (x = i + 1; x < numbers->size(); x++) {
 					if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '-') {
 						result = &(*numbers->at(i) - *numbers->at(x));
+						delete numbers->at(i);
+						delete numbers->at(x);
 					}
 					else if (typeid(*numbers->at(i)) == typeid(*numbers->at(x)) && operators->at(x - 1) == '+') {
 						result = &(*numbers->at(i) + *numbers->at(x));
+						delete numbers->at(i);
+						delete numbers->at(x);
 					}
 				}
 				x--;
 				if (result != NULL) {
 					numbers->at(i) = &result->simplify();
+					delete result;
 					numbers->erase(numbers->begin() + x);
 					operators->erase(operators->begin() + x - 1);
 				}
 				else if (typeid(*numbers->at(i)) == typeid(Integer) && typeid(*numbers->at(x)) == typeid(Placeholder)) {
 					Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
+					delete numbers->at(i);
+					delete numbers->at(i + 1);
 					numbers->at(i) = &result->simplify();
+					delete result;
 					numbers->erase(numbers->begin() + i + 1);
 					operators->erase(operators->begin() + i);
 					i--;
 				}
 			} else {
 				Number * result = &(*numbers->at(i) + *numbers->at(i + 1));
+				delete numbers->at(i);
+				delete numbers->at(i + 1);
 				numbers->at(i) = &result->simplify();
+				delete result;
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
 				i--;
@@ -249,27 +276,36 @@ Number& Calculator::PerformCalculations() {
 			if (typeid(*numbers->at(i)) != typeid(*numbers->at(i + 1))) {
 				Number * result = NULL;
 				int x = 0;
-				for (x = i+1; x < numbers->size(); x++) {
+				for (x = i + 1; x < numbers->size(); x++) {
 					if (typeid(*numbers->at(i)) == typeid(*numbers->at(x))) {
 						result = &(*numbers->at(i) - *numbers->at(x));
+						delete numbers->at(i);
+						delete numbers->at(x);
 					}
 				}
 				x--;
 				if (result != NULL) {
 					numbers->at(i) = &result->simplify();
+					delete result;
 					numbers->erase(numbers->begin() + x);
 					operators->erase(operators->begin() + x - 1);
 				}
 				else if (typeid(*numbers->at(i)) == typeid(Integer) && typeid(*numbers->at(x)) == typeid(Placeholder)) {
 					Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+					delete numbers->at(i);
+					delete numbers->at(i + 1);
 					numbers->at(i) = &result->simplify();
+					delete result;
 					numbers->erase(numbers->begin() + i + 1);
 					operators->erase(operators->begin() + i);
 					i--;
 				}
 			} else {
 				Number * result = &(*numbers->at(i) - *numbers->at(i + 1));
+				delete numbers->at(i);
+				delete numbers->at(i + 1);
 				numbers->at(i) = &result->simplify();
+				delete result;
 				numbers->erase(numbers->begin() + i + 1);
 				operators->erase(operators->begin() + i);
 				i--;
@@ -278,11 +314,21 @@ Number& Calculator::PerformCalculations() {
 	}
 
 	if (!operators->empty()) {
+		std::vector<Number*> * localNumbers = new vector<Number*>();
+		std::vector<char> * localOperators = new vector<char>();
+
+		for (int i = 0; i < this->numbers->size(); i++) {
+			localNumbers->push_back(this->numbers->at(i));
+
+			if (i < this->operators->size()) {
+				localOperators->push_back(this->operators->at(i));
+			}
+		}
+
 		Number * placeholder = new Placeholder(*this->numbers, *this->operators);
 		return *placeholder;
 	} else {
-		//numbers->at(0) = &(numbers->at(0)->simplify());
-		return *numbers->at(0);
+		return numbers->at(0)->clone();
 	}
 }
 
@@ -290,14 +336,20 @@ Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
 	for (int i = 0; i < toCalculate->getOperators().size(); i++) {
 		if (toCalculate->getOperators().at(i) == '*') {
 			Number * result = &(*toCalculate->getNumbers().at(i) * *toCalculate->getNumbers().at(i + 1));
-			toCalculate->getNumbers().at(i) = result;
+			delete toCalculate->getNumbers().at(i);
+			delete toCalculate->getNumbers().at(i + 1);
+			toCalculate->getNumbers().at(i) = &result->simplify();
+			delete result;
 			toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
 			toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
 			i--;
 		}
 		else if (toCalculate->getOperators().at(i) == '/') {
 			Number * result = &(*toCalculate->getNumbers().at(i) / *toCalculate->getNumbers().at(i + 1));
-			toCalculate->getNumbers().at(i) = result;
+			delete toCalculate->getNumbers().at(i);
+			delete toCalculate->getNumbers().at(i + 1);
+			toCalculate->getNumbers().at(i) = &result->simplify();
+			delete result;
 			toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
 			toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
 			i--;
@@ -312,21 +364,29 @@ Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
 				for (x = i + 1; x < toCalculate->getNumbers().size(); x++) {
 					if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x)) && toCalculate->getOperators().at(x - 1) == '+') {
 						result = &(*toCalculate->getNumbers().at(i) + *toCalculate->getNumbers().at(x));
+						delete toCalculate->getNumbers().at(i);
+						delete toCalculate->getNumbers().at(x);
 					}
 					else if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x)) && toCalculate->getOperators().at(x - 1) == '-') {
 						result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(x));
+						delete toCalculate->getNumbers().at(i);
+						delete toCalculate->getNumbers().at(x);
 					}
 				}
 				x--;
 				if (result != NULL) {
-					toCalculate->getNumbers().at(i) = result;
+					toCalculate->getNumbers().at(i) = &result->simplify();
+					delete result;
 					toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + x);
 					toCalculate->getOperators().erase(toCalculate->getOperators().begin() + x - 1);
 				}
 			}
 			else {
 				Number * result = &(*toCalculate->getNumbers().at(i) + *toCalculate->getNumbers().at(i + 1));
-				toCalculate->getNumbers().at(i) = result;
+				delete toCalculate->getNumbers().at(i);
+				delete toCalculate->getNumbers().at(i + 1);
+				toCalculate->getNumbers().at(i) = &result->simplify();
+				delete result;
 				toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
 				toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
 				i--;
@@ -339,18 +399,24 @@ Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
 				for (x = i + 1; x < toCalculate->getNumbers().size(); x++) {
 					if (typeid(*toCalculate->getNumbers().at(i)) == typeid(*toCalculate->getNumbers().at(x))) {
 						result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(x));
+						delete toCalculate->getNumbers().at(i);
+						delete toCalculate->getNumbers().at(x);
 					}
 				}
 				x--;
 				if (result != NULL) {
-					toCalculate->getNumbers().at(i) = result;
+					toCalculate->getNumbers().at(i) = &result->simplify();
+					delete result;
 					toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + x);
 					toCalculate->getOperators().erase(toCalculate->getOperators().begin() + x - 1);
 				}
 			}
 			else {
 				Number * result = &(*toCalculate->getNumbers().at(i) - *toCalculate->getNumbers().at(i + 1));
-				toCalculate->getNumbers().at(i) = result;
+				delete toCalculate->getNumbers().at(i);
+				delete toCalculate->getNumbers().at(i + 1);
+				toCalculate->getNumbers().at(i) = &result->simplify();
+				delete result;
 				toCalculate->getNumbers().erase(toCalculate->getNumbers().begin() + i + 1);
 				toCalculate->getOperators().erase(toCalculate->getOperators().begin() + i);
 				i--;
@@ -359,19 +425,18 @@ Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
 	}
 
 	if (!toCalculate->getOperators().empty()) {
-		Number * placeholder = new Placeholder(toCalculate->getNumbers(), toCalculate->getOperators());
+		Number * placeholder = &toCalculate->clone();
 		return *placeholder;
 	}
 	else {
-		toCalculate->getNumbers().at(0) = &(toCalculate->getNumbers().at(0)->simplify());
-		return *toCalculate->getNumbers().at(0);
+		return toCalculate->getNumbers().at(0)->simplify();
 	}
 }
 
 Number& Calculator::Calculate(string equationSegment) {
 	int numType = CheckNumberType(equationSegment);
 
-	if (equationSegment[0] == '(' && equationSegment[equationSegment.length() - 1] == ')') {
+	if (equationSegment[0] == '(' && equationSegment[equationSegment.length() - 1] == ')' && numType == 5) {
 		std::vector<Number*> * localNumbers = new vector<Number*>();
 		std::vector<char> * localOperators = new vector<char>();
 
@@ -450,15 +515,22 @@ Number& Calculator::Calculate(string equationSegment) {
 		}
 
 		Placeholder * placeholder = new Placeholder(*localNumbers, *localOperators);
-		Number * result = placeholder;
+		Number * result = &placeholder->clone();
 
 		if (localOperators->size() > 0) {
 			result = &PerformCalculations(placeholder);
 		}
 
-		result = &result->simplify();
-		return *result;
+		delete placeholder;
+
+		Number * simplified = &result->simplify();
+		delete result;
+		return *simplified;
 	} else {
+		if (equationSegment[0] == '(' && equationSegment[equationSegment.length() - 1] == ')' && numType != 5) {
+			equationSegment = equationSegment.substr(1, equationSegment.length() - 2);
+		}
+
 		if (numType == 0) {
 			Number * integer = new Integer(atoi(equationSegment.c_str()));
 			return *integer;
@@ -488,24 +560,30 @@ Number& Calculator::Calculate(string equationSegment) {
 			Number * toRaise = &Calculate(beforeCarrot);
 
 			if (typeid(*raisedTo) == typeid(Placeholder)) {
-				Placeholder * holder = dynamic_cast<Placeholder*>(raisedTo);
+				Placeholder * holder = dynamic_cast<Placeholder*>(&raisedTo->clone());
 				if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-					Root * innerExponent = new Root(*toRaise, *holder->getNumbers()[holder->getNumbers().size() - 1]);
+					Root * innerExponent = new Root(toRaise->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
 					toRaise = &innerExponent->simplify();
+					delete innerExponent;
 					if (holder->getOperators().size() > 1) {
 						holder->getNumbers().pop_back();
 						holder->getOperators().pop_back();
-						raisedTo = holder;
+						raisedTo = &holder->clone();
+						delete holder;
 					}
 					else {
-						raisedTo = holder->getNumbers()[0];
+						raisedTo = &holder->getNumbers()[0]->clone();
+						delete holder;
 					}
 				}
 			}
 
-			Number * exponent = new Exponent(*toRaise, *raisedTo);
-			exponent = &exponent->simplify();
-			return *exponent;
+			Number * exponent = new Exponent(toRaise->clone(), raisedTo->clone());
+			Number * simplified = &exponent->simplify();
+			delete exponent;
+			delete toRaise;
+			delete raisedTo;
+			return *simplified;
 		} else if (numType == 2) {
 			int indexOfColon = 0;
 			int paranthases = 0;
@@ -528,8 +606,9 @@ Number& Calculator::Calculate(string equationSegment) {
 			argument = argument.substr(indexOfColon + 1, equationSegment.length() - indexOfColon - 1);
 
 			Number * log = new Log(Calculate(base), Calculate(argument));
-			log = &log->simplify();
-			return *log;
+			Number * simplified = &log->simplify();
+			delete log;
+			return *simplified;
 		} else if (numType == 3 || numType == 4) {
 			if (numType == 3) {
 				int indexOfRT = equationSegment.find("rt:");
@@ -539,8 +618,9 @@ Number& Calculator::Calculate(string equationSegment) {
 					base = base.substr(0, indexOfRT);
 					argument = argument.substr(indexOfRT + 3, equationSegment.length() - indexOfRT - 3);
 					Number * root = new Root(Calculate(argument), Calculate(base));
-					root = &root->simplify();
-					return *root;
+					Number * simplified = &root->simplify();
+					delete root;
+					return *simplified;
 				} else {
 					throw std::runtime_error("An unrecognized root was supplied.");
 				}
@@ -551,8 +631,9 @@ Number& Calculator::Calculate(string equationSegment) {
 					argument = argument.substr(indexOfRT + 5, equationSegment.length() - indexOfRT - 5);
 					Number * integer = new Integer(2);
 					Number * root = new Root(Calculate(argument), *integer);
-					root = &root->simplify();
-					return *root;
+					Number * simplified = &root->simplify();
+					delete root;
+					return *simplified;
 				} else {
 					throw std::runtime_error("An unrecognized square root was supplied.");
 				}
@@ -644,10 +725,6 @@ bool Calculator::IsPlaceholder(string number) {
 	int closeParanthases = 0;
 	bool isPlaceholder = false;
 
-	if (number[0] == '(' && number[number.length() - 1] == ')') {
-		number = number.substr(1, number.length() - 2);
-	}
-
 	for (int i = 0; i < number.length(); i++) {
 		if (number[i] == '(') {
 			openParanthases++;
@@ -657,9 +734,11 @@ bool Calculator::IsPlaceholder(string number) {
 			closeParanthases++;
 		}
 
-		if (openParanthases == closeParanthases && (number[i] == '*' || number[i] == '/' || number[i] == '+' || (number[i] == '-' && i != 0 && number[i - 1] != ':' && number[i - 1] != '^'))) {
+		if (openParanthases == closeParanthases && (number[i] == '^' || number[i] == ':')) {
+			return false;
+		}
+		else if (openParanthases != closeParanthases && (number[i] == '*' || number[i] == '/' || number[i] == '+' || (number[i] == '-' && i != 0 && number[i - 1] != ':' && number[i - 1] != '^'))) {
 			isPlaceholder = true;
-			i = number.length();
 		}
 	}
 

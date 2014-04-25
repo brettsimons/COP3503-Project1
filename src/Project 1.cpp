@@ -52,8 +52,15 @@ int main() {
 
 					Calculator * calc = new Calculator();
 					previousExpressions.push_back(innerOption);
-					previousAnswers.push_back(calc->SimplifyExpression(innerOption));
-					cout << "\nAnswer: " << previousAnswers.at(previousAnswers.size() - 1)  << "\n" << endl;
+					try {
+						previousAnswers.push_back(calc->SimplifyExpression(innerOption));
+						cout << "\nAnswer: " << previousAnswers.at(previousAnswers.size() - 1) << "\n" << endl;
+						//delete calc;
+					}
+					catch (exception e) {
+						//delete calc;
+						cout << e.what() << endl;
+					}
 				}
 			}
 		} else if (option == 2) {

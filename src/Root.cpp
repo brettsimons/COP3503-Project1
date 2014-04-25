@@ -10,10 +10,40 @@
 Root::Root(Number& base, Number& root) {
 	this->base = &base;
 	this->root = &root;
+	
+	if (typeid(*this->root) == typeid(Placeholder) && (typeid(*this->base) == typeid(Placeholder) || typeid(*this->base) == typeid(Integer))) {
+		Placeholder * cast = dynamic_cast<Placeholder*>(this->root);
+		for (int i = 0; i < cast->getOperators().size(); i++) {
+			if (cast->getOperators().at(i) == '/') {
+				if (typeid(cast->getNumbers().at(i + 1)) == typeid(Integer)) {
+					Integer * intCast = dynamic_cast<Integer*>(cast->getNumbers().at(i + 1));
+
+					if (typeid(*this->base) == typeid(Placeholder)) {
+						Placeholder * baseCast = dynamic_cast<Placeholder*>(this->base);
+						for (int x = 0; x < baseCast->getNumbers().size(); x++) {
+							if (typeid(*baseCast->getNumbers().at(x)) == typeid(Integer)) {
+								Integer * baseInt = dynamic_cast<Integer*>(baseCast->getNumbers().at(x));
+								if (intCast->getInt() % 2 == 0 && baseInt < 0) {
+									throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
+								}
+							}
+						}
+					}
+					else if (typeid(*this->base) == typeid(Integer)) {
+						Integer * baseInt = dynamic_cast<Integer*>(this->base);
+						if (intCast->getInt() % 2 == 0 && baseInt < 0) {
+							throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 Root::~Root() {
-	// TODO Auto-generated destructor stub
+	delete base;
+	delete root;
 }
 
 Number& Root::getBase() {
@@ -35,26 +65,26 @@ Number& Root::simplify(){
 		if (rootInt->getInt() < 0) {
 			isRootNeg = true;
 			int newRoot = rootInt->getInt() * -1;
-			root = new Integer(newRoot);
 			delete rootInt;
+			root = new Integer(newRoot);
 			rootInt = new Integer(newRoot);
 		}
 		else if (rootInt->getInt() == 0) {
-			// TODO: Throw error!
+			throw std::out_of_range("The value of n for an n'th root object cannot be 0. SOURCE: " + this->toString());
 		}
 
 		if (baseInt->getInt() < 0 && rootInt->getInt() % 2 != 0) {
 			isBaseNeg = true;
 			int newBase = baseInt->getInt() * -1;
-			base = new Integer(newBase);
 			delete baseInt;
+			base = new Integer(newBase);
 			baseInt = new Integer(newBase);
 		}
 		else if (baseInt->getInt() == 0) {
 			return *(new Integer(0));
 		}
 		else if (baseInt->getInt() < 0 && rootInt->getInt() % 2 == 0) {
-			// TODO: Throw error!
+			throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
 		}
 		
 		std::vector<int*> vec = primeFactors(baseInt->getInt());
@@ -76,10 +106,12 @@ Number& Root::simplify(){
 				return *ph;
 			}
 			if (isBaseNeg) {
-				return *(new Integer(pow(baseInt->getInt(), invRoot) * -1));
+				Number * toReturn = (new Integer(pow(baseInt->getInt(), invRoot) * -1));
+				return *toReturn;
 			}
 			else {
-				return *(new Integer(pow(baseInt->getInt(), invRoot)));
+				Number * toReturn = (new Integer(pow(baseInt->getInt(), invRoot)));
+				return *toReturn;
 			}
 		}
 
@@ -105,7 +137,8 @@ Number& Root::simplify(){
 
 		if (multiplier > 1) {
 			if (innerValue == 1) {
-				return *(new Integer(multiplier));
+				Number * toReturn = new Integer(multiplier);
+				return *toReturn;
 			}
 
 			if (isRootNeg) {
@@ -120,8 +153,9 @@ Number& Root::simplify(){
 
 				Placeholder * simplified = new Placeholder();
 				simplified->getNumbers().push_back(new Integer(multiplier));
+				delete base;
 				this->base = new Integer(innerValue);
-				simplified->getNumbers().push_back(this);
+				simplified->getNumbers().push_back(&this->clone());
 				simplified->getOperators().push_back('*');
 
 				Placeholder * ph = new Placeholder();
@@ -138,13 +172,14 @@ Number& Root::simplify(){
 			else {
 				simplified->getNumbers().push_back(new Integer(multiplier));
 			}
+			delete base;
 			this->base = new Integer(innerValue);
-			simplified->getNumbers().push_back(this);
+			simplified->getNumbers().push_back(&this->clone());
 			simplified->getOperators().push_back('*');
 			return *simplified;
 		}
 
-		return *this;
+		return this->clone();
 	} else if (typeid(*root) == typeid(Placeholder)) {
 		Placeholder * rootPlaceholder = dynamic_cast<Placeholder*>(root);
 		if (typeid(rootPlaceholder->getNumbers().at(0)) == typeid(Integer)) {
@@ -155,27 +190,30 @@ Number& Root::simplify(){
 				Integer * one = new Integer(1);
 
 				ph->getNumbers().push_back(one);
-				ph->getNumbers().push_back(rootInt);
+				ph->getNumbers().push_back(&rootInt->clone());
 				ph->getOperators().push_back('/');
-				Exponent * exp = new Exponent(*base, *ph);
+				Exponent * exp = new Exponent(base->clone(), *ph);
 				return *exp;
 			} else {
-				return *this;
+				return this->clone();
 			}
 		} else {
-			return *this;
+			return this->clone();
 		}
 	} else if (typeid(*base) == typeid(Placeholder)) {
 		Placeholder * basePlaceholder = dynamic_cast<Placeholder*>(base);
 		if (typeid(basePlaceholder->getNumbers().at(0)) == typeid(Integer)) {
 			Integer * negBaseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(0));
 			Integer * baseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(1));
-			if (negBaseInt->getInt() == -1) {
-				//TODO: throw exception
+			if (typeid(*root) == typeid(Integer)) {
+				Integer * rootInt = dynamic_cast<Integer*>(root);
+				if (negBaseInt->getInt() < 0 && rootInt->getInt() % 2 == 0) {
+					throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
+				}
 			}
 		}
 	} else {
-		return *this;
+		return this->clone();
 	}
 }
 
@@ -239,8 +277,8 @@ Number& Root::operator+(Number& rhs) {
 			Number * integer = new Integer(2);
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
@@ -248,14 +286,14 @@ Number& Root::operator+(Number& rhs) {
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs + *this;
+			return rhs.clone() + this->clone();
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('+');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -273,14 +311,14 @@ Number& Root::operator-(Number& rhs) {
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Integer * neg = new Integer(-1);
-			return (*neg * rhs) + *this;
+			return (*neg * rhs.clone()) + this->clone();
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('-');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -293,18 +331,20 @@ Number& Root::operator*(Number& rhs) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		if (rhsCast->getRoot() == *this->root) {
 			if (rhsCast->getBase() == *this->base) {
-				return *this->base;
+				return this->base->clone();
 			}
 
-			Number * innards = &(rhsCast->getBase() * *this->base);
-			Root * answer = new Root(*innards, *this->root);
-			return answer->simplify();
+			Number * innards = &(rhsCast->getBase().clone() * this->base->clone());
+			Root * answer = new Root(*innards, this->root->clone());
+			Number * simplified = &answer->simplify();
+			delete answer;
+			return *simplified;
 		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -312,14 +352,14 @@ Number& Root::operator*(Number& rhs) {
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs * *this;
+			return rhs.clone() * this->clone();
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -331,28 +371,32 @@ Number& Root::operator/(Number& rhs) {
 	if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
 		if (rhsCast->getRoot() == *this->root) {
-			Number * innards = &(*this->base / rhsCast->getBase());
-			Root * answer = new Root(*innards, *this->root);
-			return answer->simplify();
+			Number * innards = &(this->base->clone() / rhsCast->getBase().clone());
+			Root * answer = new Root(*innards, this->root->clone());
+			Number * simplified = &answer->simplify();
+			delete answer;
+			return *simplified;
 		}
 		else {
-			Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
-			Number * numerator = &(rhs * *this);
-
-			return (*numerator / denominator->simplify());
+			Exponent * denominator = new Exponent(rhsCast->clone(), rhsCast->getRoot().clone());
+			Number * numerator = &(rhs.clone() * this->clone());
+			Number * result = &(numerator->clone() / denominator->simplify());
+			delete denominator;
+			delete numerator;
+			return *result;
 		}
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Integer * one = new Integer(1);
-			return *one / (rhs / *this);
+			return *one / (rhs.clone() / this->clone());
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('/');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;

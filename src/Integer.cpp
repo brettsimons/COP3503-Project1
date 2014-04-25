@@ -21,7 +21,7 @@ Integer::Integer(int toContain) {
 }
 
 Integer::~Integer() {
-	// TODO Auto-generated destructor stub
+
 }
 
 Number& Integer::operator+(Number& rhs) {
@@ -33,14 +33,14 @@ Number& Integer::operator+(Number& rhs) {
 	} else {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs + *this;
+			return rhs.clone() + this->clone();
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('+');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -58,15 +58,18 @@ Number& Integer::operator-(Number& rhs) {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Number * negativeOne = new Integer(-1);
-			Number * negativePlaceholder = &(rhs * *negativeOne);
-			return *negativePlaceholder + *this;
+			Number * negativePlaceholder = &(rhs.clone() * *negativeOne);
+			Number * result = &(negativePlaceholder->clone() + this->clone());
+			delete negativeOne;
+			delete negativePlaceholder;
+			return *result;
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('-');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -82,7 +85,7 @@ Number& Integer::operator*(Number& rhs) {
 		return *integer;
 	} else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs * *this;
+			return rhs.clone() * this->clone();
 		}
 		else if (typeid(rhs) == typeid(Exponent)) {
 			Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs);
@@ -91,8 +94,9 @@ Number& Integer::operator*(Number& rhs) {
 				Integer * baseInt = dynamic_cast<Integer*>(&rhsCast->getBase());
 
 				if (baseInt->getInt() == this->intContainer) {
-					Number * newExp = &(rhsCast->getExponent() + *(new Integer(1)));
-					Number * result = new Exponent(rhsCast->getBase(), *newExp);
+					Number * newExp = &(rhsCast->getExponent().clone() + *(new Integer(1)));
+					Number * result = new Exponent(rhsCast->getBase().clone(), newExp->clone());
+					delete newExp;
 					return *result;
 				}
 			}
@@ -100,8 +104,8 @@ Number& Integer::operator*(Number& rhs) {
 
 		std::vector<Number*> * numbers = new std::vector<Number*>();
 		std::vector<char> * operators = new std::vector<char>();
-		numbers->push_back(this);
-		numbers->push_back(&rhs);
+		numbers->push_back(&this->clone());
+		numbers->push_back(&rhs.clone());
 		operators->push_back('*');
 		Number * placeholder = new Placeholder(*numbers, *operators);
 		return *placeholder;
@@ -110,6 +114,10 @@ Number& Integer::operator*(Number& rhs) {
 
 Number& Integer::operator/(Number& rhs) {
 	if (Integer * rhsCast = dynamic_cast<Integer*>(&rhs)) {
+		if (rhsCast->getInt() == 0) {
+			throw std::out_of_range("Cannot divide by zero. SOURCE: " + this->toString() + "/" + rhs.toString());
+		}
+
 		if (this->intContainer % rhsCast->intContainer == 0) {
 			int answer = this->intContainer / rhsCast->intContainer;
 
@@ -134,18 +142,21 @@ Number& Integer::operator/(Number& rhs) {
 	}
 	else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
-		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
-		Number * numerator = &(rhs * *this);
-		Number * result = &(*numerator / denominator->simplify());
-
+		Exponent * denominator = new Exponent(rhsCast->clone(), rhsCast->getRoot().clone());
+		Number * numerator = &(rhs.clone() * this->clone());
+		Number * result = &(numerator->clone() / denominator->simplify());
+		delete numerator;
+		delete denominator;
 		return *result;
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs);
+			Placeholder * placeholder = dynamic_cast<Placeholder*>(&rhs.clone());
 
 			if (placeholder->getOperators().size() == 1 && placeholder->getOperators().at(0) == '/' && this->intContainer == 1) {
-				return *placeholder->getNumbers().at(1) / *placeholder->getNumbers().at(0);
+				Number * result = &(placeholder->getNumbers().at(1)->clone() / placeholder->getNumbers().at(0)->clone());
+				delete placeholder;
+				return *result;
 			}
 
 			bool canSimplify = true;
@@ -158,10 +169,11 @@ Number& Integer::operator/(Number& rhs) {
 			if (canSimplify) {
 				for (int i = 0; i < placeholder->getNumbers().size(); i++) {
 					if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i - 1] == '*') || (i == 0 && placeholder->getOperators()[0] == '*'))) {
-						Number * intAnswer = &(*this / *placeholder->getNumbers()[i]);
+						Number * intAnswer = &(this->clone() / placeholder->getNumbers()[i]->clone());
 
 						if (typeid(*intAnswer) == typeid(Integer)) {
 							placeholder->getOperators().erase(placeholder->getOperators().begin() + (i - 1));
+							delete placeholder->getNumbers().at(i);
 							placeholder->getNumbers().erase(placeholder->getNumbers().begin() + i);
 							placeholder->getNumbers().insert(placeholder->getNumbers().begin(), intAnswer);
 							placeholder->getOperators().insert(placeholder->getOperators().begin(), '/');
@@ -170,14 +182,18 @@ Number& Integer::operator/(Number& rhs) {
 
 						else {
 							Placeholder * tempPlaceholder = dynamic_cast<Placeholder*>(intAnswer);
-							placeholder->getNumbers()[i] = tempPlaceholder->getNumbers()[1];
-							tempPlaceholder->getNumbers()[1] = placeholder;
+							delete placeholder->getNumbers()[i];
+							placeholder->getNumbers()[i] = &tempPlaceholder->getNumbers()[1]->clone();
+							delete tempPlaceholder->getNumbers()[1];
+							tempPlaceholder->getNumbers()[1] = &placeholder->clone();
+							delete placeholder;
 							return *tempPlaceholder;
 						}
 					}
 
 					else if (typeid(*placeholder->getNumbers()[i]) == typeid(Integer) && ((i != 0 && placeholder->getOperators()[i - 1] == '/') || (i == 0 && placeholder->getOperators()[0] == '/'))) {
-						Number * answer = &(*this * *placeholder->getNumbers()[i]);
+						Number * answer = &(this->clone() * placeholder->getNumbers()[i]->clone());
+						delete placeholder;
 						return *answer;
 					}
 				}
@@ -190,8 +206,8 @@ Number& Integer::operator/(Number& rhs) {
 				Integer * baseInt = dynamic_cast<Integer*>(&rhsCast->getBase());
 
 				if (baseInt->getInt() == this->intContainer) {
-					Number * newExp = &(*(new Integer(1)) - rhsCast->getExponent());
-					Number * result = new Exponent(rhsCast->getBase(), *newExp);
+					Number * newExp = &(*(new Integer(1)) - rhsCast->getExponent().clone());
+					Number * result = new Exponent(rhsCast->getBase().clone(), *newExp);
 					return *result;
 				}
 			}
@@ -200,8 +216,8 @@ Number& Integer::operator/(Number& rhs) {
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
+	numbers->push_back(&this->clone());
+	numbers->push_back(&rhs.clone());
 	operators->push_back('/');
 	Number * placeholder = new Placeholder(*numbers, *operators);
 	return *placeholder;
@@ -324,7 +340,7 @@ std::string Integer::toString() {
 }
 
 Number& Integer::simplify() {
-	return *this;
+	return this->clone();
 }
 
 int Integer::getInt() {

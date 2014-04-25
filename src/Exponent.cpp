@@ -10,10 +10,40 @@
 Exponent::Exponent(Number& base, Number& exponent) {
 	this->base = &base;
 	this->exponent = &exponent;
+
+	if (typeid(*this->exponent) == typeid(Placeholder) && (typeid(*this->base) == typeid(Placeholder) || typeid(*this->base) == typeid(Integer))) {
+		Placeholder * cast = dynamic_cast<Placeholder*>(this->exponent);
+		for (int i = 0; i < cast->getOperators().size(); i++) {
+			if (cast->getOperators().at(i) == '/') {
+				if (typeid(cast->getNumbers().at(i + 1)) == typeid(Integer)) {
+					Integer * intCast = dynamic_cast<Integer*>(cast->getNumbers().at(i + 1));
+
+					if (typeid(*this->base) == typeid(Placeholder)) {
+						Placeholder * baseCast = dynamic_cast<Placeholder*>(this->base);
+						for (int x = 0; x < baseCast->getNumbers().size(); x++) {
+							if (typeid(*baseCast->getNumbers().at(x)) == typeid(Integer)) {
+								Integer * baseInt = dynamic_cast<Integer*>(baseCast->getNumbers().at(x));
+								if (intCast->getInt() % 2 == 0 && baseInt < 0) {
+									throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
+								}
+							}
+						}
+					}
+					else if (typeid(*this->base) == typeid(Integer)) {
+						Integer * baseInt = dynamic_cast<Integer*>(this->base);
+						if (intCast->getInt() % 2 == 0 && baseInt < 0) {
+							throw std::out_of_range("A negative number cannot be applied to an even root. SOURCE: " + this->toString());
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 Exponent::~Exponent() {
-	// TODO Auto-generated destructor stub
+	delete base;
+	delete exponent;
 }
 
 Number& Exponent::getBase() {
@@ -30,23 +60,23 @@ Number& Exponent::operator+(Number& rhs) {
             Number * integer = new Integer(2);
         	std::vector<Number*> * numbers = new std::vector<Number*>();
         	std::vector<char> * operators = new std::vector<char>();
-            numbers->push_back(this);
+            numbers->push_back(&this->clone());
             numbers->push_back(integer);
             operators->push_back('+');
-            Number * result = new Placeholder(*numbers, *operators);
+			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
 		}
 	}
 	else {
         if (typeid(rhs) == typeid(Placeholder)) {
-            return rhs + *this;
+			return rhs.clone() + this->clone();
         }
 
         else {
         	std::vector<Number*> * numbers = new std::vector<Number*>();
         	std::vector<char> * operators = new std::vector<char>();
-            numbers->push_back(this);
-            numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+            numbers->push_back(&rhs.clone());
             operators->push_back('+');
             Number * placeholder = new Placeholder(*numbers, *operators);
             return *placeholder;
@@ -56,22 +86,22 @@ Number& Exponent::operator+(Number& rhs) {
 
 Number& Exponent::operator-(Number& rhs) {
 	if (Exponent * rhsCast = dynamic_cast<Exponent*>(&rhs)) {
-		if((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
-            Number * integer = new Integer(0);
+		if ((*rhsCast->base == *this->base) && (*rhsCast->exponent == *this->exponent)) {
+			Number * integer = new Integer(0);
             return *integer;
 		}
 	}
 	else {
         if (typeid(rhs) == typeid(Placeholder)) {
         	Integer * neg = new Integer(-1);
-            return (*neg * rhs) + *this;
+			return (*neg * rhs.clone()) + this->clone();
         }
 
         else {
         	std::vector<Number*> * numbers = new std::vector<Number*>();
         	std::vector<char> * operators = new std::vector<char>();
-            numbers->push_back(this);
-            numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+            numbers->push_back(&rhs.clone());
             operators->push_back('-');
             Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -80,26 +110,19 @@ Number& Exponent::operator-(Number& rhs) {
 }
 
 Number& Exponent::operator*(Number& rhs) {
-	if(typeid(rhs) == typeid(Exponent)) {
+	if (typeid(rhs) == typeid(Exponent)) {
 		Exponent * rhsCastExp = dynamic_cast<Exponent*>(&rhs);
 
-		if(rhsCastExp->getBase() == *this->base){
-			if(typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
-				Number * newExp = &(*this->exponent + rhsCastExp->getExponent());
-				Number * expon = new Exponent(*base, *newExp);
-				return *expon;
-			}
-			else{
-				Number * times = &(rhsCastExp->getExponent() + *this->exponent);
-				Number * expon = new Exponent(*base, *times);
-				return expon->simplify();
-			}
+		if (rhsCastExp->getBase() == *this->base){
+			Number * newExp = &(this->exponent->clone() + rhsCastExp->getExponent().clone());
+			Number * expon = new Exponent(base->clone(), *newExp);
+			return expon->simplify();
 		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -107,7 +130,7 @@ Number& Exponent::operator*(Number& rhs) {
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs * *this;
+			return rhs.clone() * this->clone();
 		}
 		else if (typeid(rhs) == typeid(Root)) {
 			if (typeid(*this->exponent) == typeid(Placeholder)) {
@@ -120,14 +143,16 @@ Number& Exponent::operator*(Number& rhs) {
 			}
 		}
 		else if (typeid(rhs) == typeid(this->base)) {
-			this->exponent = &(*this->exponent + *(new Integer(1)));
-			return *this;
+			Number * result = &(this->exponent->clone() + *(new Integer(1)));
+			delete this->exponent;
+			this->exponent = result;
+			return this->clone();
 		}
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -143,45 +168,50 @@ Number& Exponent::operator/(Number& rhs) {
 			if (typeid(*this->exponent) != typeid(rhsCastExp->getExponent())){
 				std::vector<Number*> * numbers = new std::vector<Number*>();
 				std::vector<char> * operators = new std::vector<char>();
-				numbers->push_back(this->exponent);
-				numbers->push_back(&rhsCastExp->getExponent());
+				numbers->push_back(&this->exponent->clone());
+				numbers->push_back(&rhsCastExp->getExponent().clone());
 				operators->push_back('-');
 				Number * placeholder = new Placeholder(*numbers, *operators);
-				Number * expon = new Exponent(*base, *placeholder);
+				Number * expon = new Exponent(base->clone(), *placeholder);
 				return expon->simplify();
 			}
 			else {
-				Number * times = &(*this->exponent - rhsCastExp->getExponent());
-				Number * expon = new Exponent(*base, *times);
+				Number * times = &(this->exponent->clone() - rhsCastExp->getExponent().clone());
+				Number * expon = new Exponent(base->clone(), *times);
 				return expon->simplify();
 			}
 		}
-		Number * times = &(*this->exponent - rhsCastExp->getExponent());
-		Number * expon = new Exponent(*base, *times);
+		Number * times = &(this->exponent->clone() - rhsCastExp->getExponent().clone());
+		Number * expon = new Exponent(base->clone(), *times);
 		return expon->simplify();
 	}
 	else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
-		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
-		Number * numerator = &(rhs * *this);
+		Exponent * denominator = new Exponent(rhsCast->clone(), rhsCast->getRoot().clone());
+		Number * numerator = &(rhs.clone() * this->clone());
 
-		return (*numerator / denominator->simplify());
+		Number* result = &(*numerator / denominator->simplify());
+		delete denominator;
+		delete numerator;
+		return *result;
 	}
 	else if (typeid(rhs) == typeid(this->base)) {
-		this->exponent = &(*this->exponent - *(new Integer(1)));
-		return *this;
+		Number * result = &(this->exponent->clone() - *(new Integer(1)));
+		delete this->exponent;
+		this->exponent = result;
+		return this->clone();
 	}
 	else {
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Integer * one = new Integer(1);
-			return *one / (rhs / *this);
+			return *one / (rhs.clone() / this->clone());
 		}
 
 		else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('/');
 			Number * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
@@ -199,11 +229,12 @@ Number& Exponent::simplify() {
 		bool isNeg = false;
 		for (int i = 0; i < expCast->getNumbers().size(); i++) {
 			if (typeid(*expCast->getNumbers()[i]) == typeid(Integer)) {
-				Integer * tempInt = dynamic_cast<Integer*>(expCast->getNumbers()[i]);
-				if (tempInt->getInt() < 0) {
+				Integer * tempIntObj = dynamic_cast<Integer*>(expCast->getNumbers()[i]);
+				if (tempIntObj->getInt() < 0) {
 					isNeg = true;
-					expCast->getNumbers()[i] = new Integer(tempInt->getInt() * -1);
-					delete tempInt;
+					int tempInt = tempIntObj->getInt();
+					delete expCast->getNumbers()[i];
+					expCast->getNumbers()[i] = new Integer(tempInt * -1);
 				}
 			}
 		}
@@ -227,20 +258,20 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								Exponent * exp1 = new Exponent(*this->base, *temp);
+								Exponent * exp1 = new Exponent(this->base->clone(), *temp);
 								temp = new Placeholder();
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 						}
 						else {
-							Exponent * exp1 = new Exponent(*this->base, *temp);
+							Exponent * exp1 = new Exponent(this->base->clone(), *temp);
 							temp = new Placeholder();
 							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('*');
@@ -250,19 +281,19 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+								Exponent * exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i)->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 						}
 						else {
-							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+							Exponent * exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i)->clone());
 							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('*');
 						}
@@ -273,20 +304,20 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								Exponent * exp1 = new Exponent(*this->base, *temp);
+								Exponent * exp1 = new Exponent(this->base->clone(), *temp);
 								temp = new Placeholder();
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('/');
 							}
 						}
 						else {
-							Exponent * exp1 = new Exponent(*this->base, *temp);
+							Exponent * exp1 = new Exponent(this->base->clone(), *temp);
 							temp = new Placeholder();
 							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('/');
@@ -296,19 +327,19 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								Exponent * exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								Exponent * exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+								Exponent * exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i)->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('/');
 							}
 						}
 						else {
-							Exponent * exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i));
+							Exponent * exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i)->clone());
 							result->getNumbers().push_back(&exp1->simplify());
 							result->getOperators().push_back('/');
 						}
@@ -316,10 +347,10 @@ Number& Exponent::simplify() {
 				}
 				else if (i < expCast->getOperators().size()) {
 					if (expCast->getOperators().size() > 0 && expCast->getOperators()[i] == '/') {
-						Root * innerExponent = new Root(*this->base, *expCast->getNumbers()[i + 1]);
-						Exponent * exp1 = new Exponent(innerExponent->simplify(), *expCast->getNumbers()[i]);
+						Root * innerExponent = new Root(this->base->clone(), expCast->getNumbers()[i + 1]->clone());
+						Exponent * exp1 = new Exponent(innerExponent->simplify(), expCast->getNumbers()[i]->clone());
 						if (expCast->getOperators().at(i + 1) == '*' || expCast->getOperators().at(i + 1) == '/') {
-							temp->getNumbers().push_back(expCast->getNumbers().at(i));
+							temp->getNumbers().push_back(&expCast->getNumbers().at(i)->clone());
 							temp->getOperators().push_back(expCast->getOperators().at(i + 1));
 						}
 						else if (expCast->getOperators().at(i + 1) == '+') {
@@ -332,7 +363,7 @@ Number& Exponent::simplify() {
 						}
 					}
 					else {
-						temp->getNumbers().push_back(expCast->getNumbers().at(i));
+						temp->getNumbers().push_back(&expCast->getNumbers().at(i)->clone());
 						temp->getOperators().push_back(expCast->getOperators().at(i));
 					}
 				}
@@ -344,23 +375,23 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i + 1)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i + 1));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
+								temp->getNumbers().push_back(&expCast->getNumbers().at(i + 1)->clone());
 
-								exp1 = new Exponent(*this->base, *temp);
+								exp1 = new Exponent(this->base->clone(), *temp);
 
 								result->getNumbers().push_back(&exp1->simplify());
 							}
 						}
 						else {
-							temp->getNumbers().push_back(expCast->getNumbers().at(i + 1));
+							temp->getNumbers().push_back(&expCast->getNumbers().at(i + 1)->clone());
 
-							exp1 = new Exponent(*this->base, *temp);
+							exp1 = new Exponent(this->base->clone(), *temp);
 
 							result->getNumbers().push_back(&exp1->simplify());
 						}
@@ -369,19 +400,19 @@ Number& Exponent::simplify() {
 						if (typeid(*expCast->getNumbers().at(i + 1)) == typeid(Placeholder)) {
 							Placeholder * holder = dynamic_cast<Placeholder*>(expCast->getNumbers().at(i + 1));
 							if (holder->getOperators().size() > 0 && holder->getOperators()[holder->getOperators().size() - 1] == '/') {
-								Root * innerExponent = new Root(*this->base, *holder->getNumbers()[holder->getNumbers().size() - 1]);
-								exp1 = new Exponent(innerExponent->simplify(), *holder->getNumbers()[holder->getNumbers().size() - 2]);
+								Root * innerExponent = new Root(this->base->clone(), holder->getNumbers()[holder->getNumbers().size() - 1]->clone());
+								exp1 = new Exponent(innerExponent->simplify(), holder->getNumbers()[holder->getNumbers().size() - 2]->clone());
 								result->getNumbers().push_back(&exp1->simplify());
 								result->getOperators().push_back('*');
 							}
 							else {
-								exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
+								exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i + 1)->clone());
 
 								result->getNumbers().push_back(&exp1->simplify());
 							}
 						}
 						else {
-							exp1 = new Exponent(*this->base, *expCast->getNumbers().at(i + 1));
+							exp1 = new Exponent(this->base->clone(), expCast->getNumbers().at(i + 1)->clone());
 
 							result->getNumbers().push_back(&exp1->simplify());
 						}
@@ -404,8 +435,9 @@ Number& Exponent::simplify() {
 			return *num;
 		}
 		else {
-			this->exponent = new Integer(exponentCast->getInt() * -1);
-			delete exponentCast;
+			Number * newExp = new Integer(exponentCast->getInt() * -1);
+			delete this->exponent;
+			this->exponent = newExp;
 
 			Integer * one = new Integer(1);
 
@@ -422,11 +454,10 @@ Number& Exponent::simplify() {
 			return *(new Integer(1));
 		}
 		else if (exponentCast->getInt() == 1) {
-			return *base;
+			return base->clone();
 		}
 		else if (exponentCast->getInt() < 0) {
 			this->exponent = new Integer(exponentCast->getInt() * -1);
-			delete exponentCast;
 
 			Integer * one = new Integer(1);
 
@@ -439,19 +470,38 @@ Number& Exponent::simplify() {
 	}
 	else if (typeid(*base) == typeid(Root)) {
 		Root * baseCast = dynamic_cast<Root*>(base);
+		Integer * one = new Integer(1);
+		Number * rootEquiv = &(*one / this->exponent->clone());
 
-		if (baseCast->getRoot() == *this->exponent) {
-			return baseCast->getBase();
+		if (baseCast->getRoot() == *rootEquiv) {
+			delete one;
+			delete rootEquiv;
+			return baseCast->getBase().clone();
 		}
 		else if (typeid(*this->exponent) == typeid(Integer) && typeid(baseCast->getBase()) == typeid(Integer)) {
-			Number * innerRoot = &((new Exponent(baseCast->getBase(), *this->exponent))->simplify());
+			Number * innerRoot = &((new Exponent(baseCast->getBase().clone(), this->exponent->clone()))->simplify());
 			Integer * one = new Integer(1);
+			delete exponent;
 			this->exponent = one;
-			Root * result = new Root(*innerRoot, baseCast->getRoot());
+			Root * result = new Root(*innerRoot, baseCast->getRoot().clone());
 			return result->simplify();
 		}
 	}
-    return *this;
+	else if (typeid(*base) == typeid(Placeholder) && typeid(*exponent) == typeid(Integer)) {
+		Integer * expCast = dynamic_cast<Integer*>(exponent);
+		Placeholder * result = new Placeholder();
+		result->getNumbers().push_back(&base->clone());
+
+		for (int i = 0; i < expCast->getInt() - 1; i++) {
+			Number * replacement = &(result->getNumbers().at(0)->clone() * base->clone());
+			delete result->getNumbers().at(0);
+			result->getNumbers().at(0) = &replacement->simplify();
+			delete replacement;
+		}
+
+		return *result;
+	}
+    return this->clone();
 }
 
 Number& Exponent::clone() {

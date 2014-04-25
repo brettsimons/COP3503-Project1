@@ -11,33 +11,100 @@
 Log::Log(Number& base, Number& argument) {
 	this->base = &base;
 	this->argument = &argument;
+
+	if (typeid(*this->argument) == typeid(Placeholder) && (typeid(*this->base) == typeid(Placeholder) || typeid(*this->base) == typeid(Integer))) {
+		Placeholder * cast = dynamic_cast<Placeholder*>(this->argument);
+		for (int i = 0; i < cast->getOperators().size(); i++) {
+			if (typeid(cast->getNumbers().at(i + 1)) == typeid(Integer)) {
+				Integer * intCast = dynamic_cast<Integer*>(cast->getNumbers().at(i + 1));
+
+				if (typeid(*this->base) == typeid(Placeholder)) {
+					Placeholder * baseCast = dynamic_cast<Placeholder*>(this->base);
+					for (int x = 0; x < baseCast->getNumbers().size(); x++) {
+						if (typeid(*baseCast->getNumbers().at(x)) == typeid(Integer)) {
+							Integer * baseInt = dynamic_cast<Integer*>(baseCast->getNumbers().at(x));
+							if (intCast->getInt() <= 0) {
+								throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+							}
+							else if (baseInt->getInt() <= 0) {
+								throw std::out_of_range("The log base must be greater than 0. SOURCE: " + this->toString());
+							}
+						}
+					}
+				}
+				else if (typeid(*this->base) == typeid(Integer)) {
+					Integer * baseInt = dynamic_cast<Integer*>(this->base);
+					if (intCast->getInt() <= 0) {
+						throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+					}
+					else if (baseInt->getInt() <= 0) {
+						throw std::out_of_range("The log base must be greater than 0. SOURCE: " + this->toString());
+					}
+				}
+			}
+		}
+	}
+	else if (typeid(*this->argument) == typeid(Integer) && (typeid(*this->base) == typeid(Placeholder) || typeid(*this->base) == typeid(Integer))) {
+		Integer * cast = dynamic_cast<Integer*>(this->argument);
+		if (typeid(*this->base) == typeid(Placeholder)) {
+			Placeholder * baseCast = dynamic_cast<Placeholder*>(this->base);
+			for (int x = 0; x < baseCast->getNumbers().size(); x++) {
+				if (typeid(*baseCast->getNumbers().at(x)) == typeid(Integer)) {
+					Integer * baseInt = dynamic_cast<Integer*>(baseCast->getNumbers().at(x));
+					if (cast->getInt() <= 0) {
+						throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+					}
+					else if (baseInt->getInt() <= 0) {
+						throw std::out_of_range("The log base must be greater than 0. SOURCE: " + this->toString());
+					}
+				}
+			}
+		}
+		else if (typeid(*this->base) == typeid(Integer)) {
+			Integer * baseInt = dynamic_cast<Integer*>(this->base);
+			if (cast->getInt() <= 0) {
+				throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+			}
+			else if (baseInt->getInt() <= 0) {
+				throw std::out_of_range("The log base must be greater than 0. SOURCE: " + this->toString());
+			}
+		}
+		else {
+			if (cast->getInt() <= 0) {
+				throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+			}
+		}
+	}
 }
 
 Log::~Log() {
-	// TODO Auto-generated destructor stub
+	delete base;
+	delete argument;
 }
 
 Number& Log::operator+(Number& rhs) {
 
     if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
 		if(rhsCast->getBase() == *this->base) {
-            Number * answer = &(rhsCast->getArgument() * *this->argument);
-            Log * log = new Log(*base, *answer);
-			return log->simplify();
+			Number * answer = &(rhsCast->getArgument().clone() * this->argument->clone());
+            Log * log = new Log(base->clone(), *answer);
+			Number * simplified = &log->simplify();
+			delete log;
+			return *simplified;
         }
 	}
 
 	if (typeid(rhs) == typeid(Placeholder)) {
-		return rhs + *this;
+		return rhs.clone() + this->clone();
 	}
 
 	else {
-		std::vector<Number*> numbers;
-		std::vector<char> operators;
-		numbers.push_back(this);
-		numbers.push_back(&rhs);
-		operators.push_back('+');
-		Placeholder * placeholder = new Placeholder(numbers, operators);
+		std::vector<Number*> * numbers = new std::vector<Number*>();
+		std::vector<char> * operators = new std::vector<char>();
+		numbers->push_back(&this->clone());
+		numbers->push_back(&rhs.clone());
+		operators->push_back('+');
+		Placeholder * placeholder = new Placeholder(*numbers, *operators);
 		return *placeholder;
 	}
 }
@@ -46,25 +113,30 @@ Number& Log::operator-(Number& rhs) {
 
     if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
 		if(rhsCast->getBase() == *this->base) {
-            Number * answer = &(rhsCast->getArgument() / *this->argument);
-            Log * log = new Log(*base, *answer);
-            return log->simplify();
+            Number * answer = &(rhsCast->getArgument().clone() / this->argument->clone());
+            Log * log = new Log(base->clone(), *answer);
+			Number * simplified = &log->simplify();
+			delete log;
+            return *simplified;
         }
 
 	}
 	if (typeid(rhs) == typeid(Placeholder)) {
 		Integer * negativeOne = new Integer(-1);
-		Number * negativePlaceholder = &(rhs * *negativeOne);
-		return *negativePlaceholder + *this;
+		Number * negativePlaceholder = &(rhs.clone() * *negativeOne);
+		Number * result = &(*negativePlaceholder + this->clone());
+		delete negativeOne;
+		delete negativePlaceholder;
+		return *result;
 	}
 
 	else {
-		std::vector<Number*> numbers;
-		std::vector<char> operators;
-		numbers.push_back(this);
-		numbers.push_back(&rhs);
-		operators.push_back('-');
-		Placeholder * placeholder = new Placeholder(numbers, operators);
+		std::vector<Number*> * numbers = new std::vector<Number*>();
+		std::vector<char> * operators = new std::vector<char>();
+		numbers->push_back(&this->clone());
+		numbers->push_back(&rhs.clone());
+		operators->push_back('-');
+		Placeholder * placeholder = new Placeholder(*numbers, *operators);
 		return *placeholder;
 	}
 }
@@ -74,8 +146,10 @@ Number& Log::operator*(Number& rhs) {
     if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
 		if((rhsCast->getBase() == *this->base) && (rhsCast->getArgument() == *this->argument)) {
     		Integer * raisedTo = new Integer(2);
-            Exponent * exp = new Exponent(*this, *raisedTo);
-			return exp->simplify();
+			Exponent * exp = new Exponent(this->clone(), *raisedTo);
+			Number * simplified = &exp->simplify();
+			delete exp;
+			return *simplified;
         }
     }
 
@@ -84,9 +158,12 @@ Number& Log::operator*(Number& rhs) {
 
         if(rhsCast->getBase() == *this) {
         		Integer * toAdd = new Integer(1);
-            	Number * raisedTo = &(rhsCast->getExponent() + *toAdd);
-                Exponent * exp = new Exponent(*this, *raisedTo);
-                return exp->simplify();
+				Number * raisedTo = &(rhsCast->getExponent().clone() + *toAdd);
+                Exponent * exp = new Exponent(this->clone(), raisedTo->clone());
+				Number * simplified = &exp->simplify();
+				delete raisedTo;
+				delete exp;
+                return *simplified;
             }
            else {
                std::vector<Number*> numbers;
@@ -102,16 +179,16 @@ Number& Log::operator*(Number& rhs) {
     else {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
-			return rhs * *this;
+			return rhs.clone() * this->clone();
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('*');
-			Placeholder * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
+			operators->push_back('*');
+			Placeholder * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}
@@ -121,31 +198,35 @@ Number& Log::operator/(Number& rhs) {
 
     if (Log * rhsCast = dynamic_cast<Log*>(&rhs)) {
 		if(rhsCast->getBase() == *this->base) {
-            Log * log = new Log(this->getArgument(), rhsCast->getArgument());
-			return log->simplify();
+			Log * log = new Log(this->getArgument().clone(), rhsCast->getArgument().clone());
+			Number * simplified = &log->simplify();
+			delete log;
+			return *simplified;
         }
 	}
 	else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
-		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
-		Number * numerator = &(rhs * *this);
-
-		return (*numerator / denominator->simplify());
+		Exponent * denominator = new Exponent(rhsCast->clone(), rhsCast->getRoot().clone());
+		Number * numerator = &(rhs.clone() * this->clone());
+		Number * result = &(numerator->clone() / denominator->simplify());
+		delete numerator;
+		delete denominator;
+		return *result;
 	}
 	else {
 
 		if (typeid(rhs) == typeid(Placeholder)) {
 			Integer * reciprical = new Integer(1);
-			return (*reciprical / (rhs / *this));
+			return (*reciprical / (rhs.clone() / this->clone()));
 		}
 
 		else {
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(&rhs);
-			operators.push_back('/');
-			Placeholder * placeholder = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
+			operators->push_back('/');
+			Placeholder * placeholder = new Placeholder(*numbers, *operators);
 			return *placeholder;
 		}
 	}
@@ -162,6 +243,13 @@ Number& Log::simplify() {
 		Integer * tempHolder = NULL;
 
 		bool isReversed = false;
+
+		if (argumentInt->getInt() <= 0) {
+			throw std::out_of_range("The log argument must be greater than 0. SOURCE: " + this->toString());
+		}
+		else if (baseInt->getInt() <= 0) {
+			throw std::out_of_range("The log base must be greater than 0. SOURCE: " + this->toString());
+		}
 
 		if (baseInt->getInt() > argumentInt->getInt()) {
 			isReversed = true;
@@ -195,8 +283,14 @@ Number& Log::simplify() {
 					}
 				}
 			}
-			int aRHS = argumentInt->getInt() / tempMax;
-			int ans1 = log10(tempMax)/log10(baseInt->getInt());
+
+			int aRHS = argumentInt->getInt();
+			int ans1 = NULL;
+
+			if (tempMax != 0) {
+				aRHS = argumentInt->getInt() / tempMax;
+				ans1 = log10(tempMax) / log10(baseInt->getInt());
+			}
 
 			int powMax = -1;
 			int logBase = -1;
@@ -210,13 +304,13 @@ Number& Log::simplify() {
 			}
 
 			Integer*  ebase;
-			Integer* ans1Int;
+			Number* ans1Int;
 
 			if (powMax == -1 && logBase == -1) {
 				ebase = new Integer(aRHS);
 				ans1Int = new Integer(ans1);
 
-				Log* secondHalf = new Log(*base, *ebase);
+				Log* secondHalf = new Log(base->clone(), *ebase);
 
 				std::vector<Number*> * numbs = new std::vector<Number*>();
 				std::vector<char> * ops = new std::vector<char>();
@@ -231,9 +325,15 @@ Number& Log::simplify() {
 				ebase = new Integer(logBase);
 
 				Integer* powMaxNum = new Integer(powMax);
-				ans1Int = new Integer(ans1);
 
-				Log* secondHalf = new Log(*base, *ebase);
+				if (ans1 != NULL) {
+					ans1Int = new Integer(ans1);
+				}
+				else {
+					ans1Int = new Log(base->clone(), *(new Integer(argumentInt->getInt() / pow(logBase, powMax))));
+				}
+
+				Log* secondHalf = new Log(base->clone(), *ebase);
 
 				std::vector<Number*> * numbs = new std::vector<Number*>();
 				std::vector<char> * ops = new std::vector<char>();
@@ -247,7 +347,7 @@ Number& Log::simplify() {
 			}
 		}
 		else {
-			return *this;
+			return this->clone();
 		}
 	}
 	else if (typeid(*argument) == typeid(Variable) && typeid(*base) == typeid(Variable)) {
@@ -266,7 +366,7 @@ Number& Log::simplify() {
 			Variable * argumentVar = dynamic_cast<Variable*>(&argumentExp->getBase());
 
 			if (argumentVar->getVariable() == baseVar->getVariable()) {
-				return argumentExp->getExponent();
+				return argumentExp->getExponent().clone();
 			}
 		}
 	}
@@ -335,7 +435,7 @@ Number& Log::simplify() {
 			return *(new Integer(0));
 		}
 	}
-	return *this;
+	return this->clone();
 }
 
 Number& Log::getBase() {

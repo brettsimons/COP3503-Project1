@@ -15,27 +15,27 @@ Variable::Variable(std::string variable) {
 }
 
 Variable::~Variable() {
-	// TODO Auto-generated destructor stub
+
 }
 
 Number& Variable::operator+(Number& rhs) {
 	if (Variable * rhsCast = dynamic_cast<Variable*>(&rhs)) {
 		if (rhsCast->var == this->var) {
 			Number * integer = new Integer(2);
-			std::vector<Number*> numbers;
-			std::vector<char> operators;
-			numbers.push_back(this);
-			numbers.push_back(integer);
-			operators.push_back('*');
-			Number * result = new Placeholder(numbers, operators);
+			std::vector<Number*> * numbers = new std::vector<Number*>();
+			std::vector<char> * operators = new std::vector<char>();
+			numbers->push_back(&this->clone());
+			numbers->push_back(integer);
+			operators->push_back('*');
+			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
 		}
 	}
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
+	numbers->push_back(&this->clone());
+	numbers->push_back(&rhs.clone());
 	operators->push_back('+');
 	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
@@ -51,8 +51,8 @@ Number& Variable::operator-(Number& rhs) {
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
+	numbers->push_back(&this->clone());
+	numbers->push_back(&rhs.clone());
 	operators->push_back('-');
 	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
@@ -63,13 +63,13 @@ Number& Variable::operator*(Number& rhs) {
 		Variable * rhsCastVar = dynamic_cast<Variable*>(&rhs);
 		if (rhsCastVar->var == this->var) {
 			Number * integer = new Integer(2);
-			Exponent * exponent = new Exponent(*this, *integer);
+			Exponent * exponent = new Exponent(this->clone(), *integer);
 			return *exponent;
 		} else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('*');
 			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
@@ -82,7 +82,7 @@ Number& Variable::operator*(Number& rhs) {
 				if (typeid(rhsCastExp->getExponent()) == typeid(Integer)) {
 					Integer * integer = dynamic_cast<Integer*>(&rhsCastExp->getExponent());
 					Number * newExpInt = new Integer(integer->getInt() + 1);
-					Exponent * exponent = new Exponent(rhs, *newExpInt);
+					Exponent * exponent = new Exponent(rhs.clone(), *newExpInt);
 					return *exponent;
 				}
 			}
@@ -91,8 +91,8 @@ Number& Variable::operator*(Number& rhs) {
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
+	numbers->push_back(&this->clone());
+	numbers->push_back(&rhs.clone());
 	operators->push_back('*');
 	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
@@ -107,8 +107,8 @@ Number& Variable::operator/(Number& rhs) {
 		} else {
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
-			numbers->push_back(this);
-			numbers->push_back(&rhs);
+			numbers->push_back(&this->clone());
+			numbers->push_back(&rhs.clone());
 			operators->push_back('/');
 			Number * result = new Placeholder(*numbers, *operators);
 			return *result;
@@ -121,7 +121,7 @@ Number& Variable::operator/(Number& rhs) {
 				if (typeid(rhsCastExp->getExponent()) == typeid(Integer)) {
 					Integer * integer = dynamic_cast<Integer*>(&rhsCastExp->getExponent());
 					Number * newExpInt = new Integer(integer->getInt() - 1);
-					Exponent * exponent = new Exponent(*this, *newExpInt);
+					Exponent * exponent = new Exponent(this->clone(), *newExpInt);
 
 					return *exponent;
 				}
@@ -130,16 +130,18 @@ Number& Variable::operator/(Number& rhs) {
 	}
 	else if (typeid(rhs) == typeid(Root)) {
 		Root * rhsCast = dynamic_cast<Root*>(&rhs);
-		Exponent * denominator = new Exponent(*rhsCast, rhsCast->getRoot());
-		Number * numerator = &(rhs * *this);
-
-		return (*numerator / denominator->simplify());
+		Exponent * denominator = new Exponent(rhsCast->clone(), rhsCast->getRoot().clone());
+		Number * numerator = &(rhs.clone() * this->clone());
+		Number * result = &(numerator->clone() / denominator->simplify());
+		delete numerator;
+		delete denominator;
+		return *result;
 	}
 
 	std::vector<Number*> * numbers = new std::vector<Number*>();
 	std::vector<char> * operators = new std::vector<char>();
-	numbers->push_back(this);
-	numbers->push_back(&rhs);
+	numbers->push_back(&this->clone());
+	numbers->push_back(&rhs.clone());
 	operators->push_back('/');
 	Number * result = new Placeholder(*numbers, *operators);
 	return *result;
@@ -259,7 +261,7 @@ std::string Variable::toString() {
 }
 
 Number& Variable::simplify() {
-	return *this;
+	return this->clone();
 }
 
 std::string Variable::getVariable() {

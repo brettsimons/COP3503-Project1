@@ -10,11 +10,6 @@ Number::~Number() {
 	// TODO Auto-generated destructor stub
 }
 
-template<class T1, class T2>
-std::string Number::lcm(T1 denom1, T2 denom2) {
-
-}
-
 int Number::gcd(int num1, int num2) {
 	if (num1 > num2) {
 		int temp = num1;
