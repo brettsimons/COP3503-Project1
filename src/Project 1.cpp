@@ -55,10 +55,10 @@ int main() {
 					try {
 						previousAnswers.push_back(calc->SimplifyExpression(innerOption));
 						cout << "\nAnswer: " << previousAnswers.at(previousAnswers.size() - 1) << "\n" << endl;
-						//delete calc;
+						delete calc;
 					}
 					catch (exception e) {
-						//delete calc;
+						delete calc;
 						cout << e.what() << endl;
 					}
 				}

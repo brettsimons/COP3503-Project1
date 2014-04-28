@@ -6,8 +6,6 @@
  */
 
 #include "Calculator.h"
-#include <iostream>
-#include <stdexcept>
 
 using namespace std;
 
@@ -21,11 +19,8 @@ Calculator::~Calculator() {
 		delete this->numbers->at(i);
 	}
 
-	this->numbers->clear();
-	this->operators->clear();
-
-	delete this->numbers;
-	delete this->operators;
+	if (!this->numbers->empty()) this->numbers->clear();
+	if (!this->operators->empty()) this->operators->clear();
 }
 
 string Calculator::SimplifyExpression(string equation) {
@@ -425,8 +420,7 @@ Number& Calculator::PerformCalculations(Placeholder * toCalculate) {
 	}
 
 	if (!toCalculate->getOperators().empty()) {
-		Number * placeholder = &toCalculate->clone();
-		return *placeholder;
+		return *toCalculate;
 	}
 	else {
 		return toCalculate->getNumbers().at(0)->simplify();
@@ -453,9 +447,11 @@ Number& Calculator::Calculate(string equationSegment) {
 			else if (i + 1 == equationSegment.length()) {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, segment.length() - indexOfLastOp - 2));
 				localNumbers->push_back(&lhs->simplify());
+				delete lhs;
 			} else if (equationSegment[i] == '*') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(&lhs->simplify());
+				delete lhs;
 				localOperators->push_back('*');
 
 				if (equationSegment[i + 1] == '-') {
@@ -469,6 +465,7 @@ Number& Calculator::Calculate(string equationSegment) {
 			} else if (equationSegment[i] == '/') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(&lhs->simplify());
+				delete lhs;
 				localOperators->push_back('/');
 
 				if (equationSegment[i + 1] == '-') {
@@ -482,6 +479,7 @@ Number& Calculator::Calculate(string equationSegment) {
 			} else if (equationSegment[i] == '+') {
 				Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 				localNumbers->push_back(&lhs->simplify());
+				delete lhs;
 
 				if (equationSegment[i + 1] == '-') {
 					localOperators->push_back('-');
@@ -500,6 +498,7 @@ Number& Calculator::Calculate(string equationSegment) {
 				} else {
 					Number * lhs = &Calculate(segment.substr(indexOfLastOp + 1, i - indexOfLastOp - 1));
 					localNumbers->push_back(&lhs->simplify());
+					delete lhs;
 
 					if (equationSegment[i + 1] == '-') {
 						localOperators->push_back('+');
@@ -518,10 +517,9 @@ Number& Calculator::Calculate(string equationSegment) {
 		Number * result = &placeholder->clone();
 
 		if (localOperators->size() > 0) {
+			delete result;
 			result = &PerformCalculations(placeholder);
 		}
-
-		delete placeholder;
 
 		Number * simplified = &result->simplify();
 		delete result;

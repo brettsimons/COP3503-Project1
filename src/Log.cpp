@@ -233,6 +233,16 @@ Number& Log::operator/(Number& rhs) {
 }
 
 std::string Log::toString() {
+	if (typeid(*this->base) == typeid(Placeholder) && typeid(*this->argument) == typeid(Placeholder)) {
+		return "log_(" + this->base->toString() + "):" + this->argument->toString() + "";
+	}
+	else if (typeid(*this->base) == typeid(Placeholder)) {
+		return "log_(" + this->base->toString() + "):(" + this->argument->toString() + ")";
+	}
+	else if (typeid(*this->argument) == typeid(Placeholder)) {
+		return "log_" + this->base->toString() + ":" + this->argument->toString() + "";
+	}
+
     return "log_" + this->base->toString() + ":(" + this->argument->toString() + ")";
 }
 

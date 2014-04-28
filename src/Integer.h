@@ -8,8 +8,11 @@
 #ifndef INTEGER_H_
 #define INTEGER_H_
 
-#include<string>
-#include<vector>
+#include <string>
+#include <vector>
+#include <stdexcept>
+#include <typeinfo>
+#include <sstream>
 #include "Number.h"
 #include "Exponent.h"
 #include "Placeholder.h"

@@ -6,9 +6,6 @@
  */
 
 #include "Variable.h"
-#include <typeinfo>
-#include <sstream>
-#include <vector>
 
 Variable::Variable(std::string variable) {
 	var = variable;

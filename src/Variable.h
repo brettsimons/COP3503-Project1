@@ -8,7 +8,11 @@
 #ifndef VARIABLE_H_
 #define VARIABLE_H_
 
-#include<string>
+#include <string>
+#include <stdexcept>
+#include <typeinfo>
+#include <sstream>
+#include <vector>
 #include "Number.h"
 #include "Exponent.h"
 #include "Integer.h"

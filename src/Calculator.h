@@ -11,6 +11,8 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <iostream>
+#include <stdexcept>
 #include "Number.h"
 #include "Exponent.h"
 #include "Log.h"

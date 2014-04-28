@@ -11,6 +11,7 @@
 #include "Number.h"
 #include <string>
 #include <cmath>
+#include <stdexcept>
 #include "Placeholder.h"
 #include "Integer.h"
 #include "Log.h"

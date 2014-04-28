@@ -6,15 +6,6 @@
  */
 
 #include "Integer.h"
-#include <typeinfo>
-#include <sstream>
-#include <vector>
-#include "Number.h"
-#include "Exponent.h"
-#include "Placeholder.h"
-#include "Log.h"
-#include "Root.h"
-#include "Variable.h"
 
 Integer::Integer(int toContain) {
 	this->intContainer = toContain;

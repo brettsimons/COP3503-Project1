@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <typeinfo>
+#include <stdexcept>
 #include "Number.h"
 #include "Exponent.h"
 #include "Integer.h"

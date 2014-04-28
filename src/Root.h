@@ -12,6 +12,7 @@
 
 #include "Number.h"
 #include <cmath>
+#include <stdexcept>
 #include "Exponent.h"
 #include "Integer.h"
 #include "Log.h"

@@ -266,6 +266,18 @@ std::string Root::toString() {
 		if (intRoot->getInt() == 2) {
 			return "sqrt:(" + this->base->toString() + ")";
 		}
+		else if (intRoot->getInt() < 0 && typeid(*this->base) == typeid(Placeholder)) {
+			return "(" + this->root->toString() + ")rt:" + this->base->toString();
+		}
+		else if (intRoot->getInt() < 0 && typeid(*this->base) != typeid(Placeholder)) {
+			return "(" + this->root->toString() + ")rt:(" + this->base->toString() + ")";
+		}
+	}
+	else if (typeid(*this->root) == typeid(Placeholder) && typeid(*this->base) == typeid(Placeholder)) {
+		return "(" + this->root->toString() + ")rt:" + this->base->toString();
+	}
+	else if (typeid(*this->root) == typeid(Placeholder) && typeid(*this->base) != typeid(Placeholder)) {
+		return "(" + this->root->toString() + ")rt:(" + this->base->toString() + ")";
 	}
 
 	return this->root->toString() + "rt:(" + this->base->toString() + ")";

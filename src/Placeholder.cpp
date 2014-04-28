@@ -6,7 +6,6 @@
  */
 
 #include "Placeholder.h"
-#include <algorithm>
 
 Placeholder::Placeholder() {
 	this->numbers = new std::vector<Number*>();
@@ -921,10 +920,12 @@ Number& Placeholder::operator/(Number& rhs) {
 		intArray.push_back(-1);
 
 		for (int i = 0; i < this->operators->size(); i++) {
-			if (typeid(*this->numbers->at(i)) == typeid(Integer) && (((i == 0 || i < this->operators->size()) && (this->operators->at(i) == '*' || this->operators->at(i) == '/')) || (i > 0 && this->operators->at(i - 1) == '*' || this->operators->at(i - 1) == '/'))) {
-				Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
-				if (intArray.at(arrayIndex) < tempInt->getInt()) {
-					intArray.at(arrayIndex) = tempInt->getInt();
+			if (typeid(*this->numbers->at(i)) == typeid(Integer) && (((i == 0 || i < this->operators->size()) && (this->operators->at(i) == '*' || this->operators->at(i) == '/')))) {
+				if (i > 0 && this->operators->at(i - 1) == '*' || this->operators->at(i - 1) == '/') {
+					Integer * tempInt = dynamic_cast<Integer*>(this->numbers->at(i));
+					if (intArray.at(arrayIndex) < tempInt->getInt()) {
+						intArray.at(arrayIndex) = tempInt->getInt();
+					}
 				}
 			} else {
 				arrayIndex++;
@@ -1090,7 +1091,7 @@ Number& Placeholder::operator/(Number& rhs) {
 
 std::string Placeholder::toString() {
 	std::string toReturn = "";
-	bool openedParanthases = false;
+	bool hasAddSub = false;
 	for (int i = 0; i < this->numbers->size(); i++) {
 		if (typeid(*this->numbers->at(i)) == typeid(Integer)) {
 			Integer * integer = dynamic_cast<Integer*>(this->numbers->at(i));
@@ -1122,21 +1123,51 @@ std::string Placeholder::toString() {
 				i = highExtrenum;
 			}
 		}
-		if (i == 0 && this->operators->size() > 0 && this->operators->at(0) != '\0') {
-			toReturn += "(" + this->numbers->at(i)->toString() + this->operators->at(i);
-			openedParanthases = true;
+		else if (typeid(*this->numbers->at(i)) == typeid(Placeholder)) {
+			Placeholder * ph = dynamic_cast<Placeholder*>(this->numbers->at(i));
+			for (int x = 0; x < ph->getOperators().size(); x++) {
+				if (ph->getOperators().at(x) == '+' || ph->getOperators().at(x) == '-') {
+					hasAddSub = true;
+					break;
+				}
+			}
 		}
-		else if (i < this->operators->size()) {
-			toReturn += this->numbers->at(i)->toString() + this->operators->at(i);
+
+		if (i == 0) {
+			std::string number = this->numbers->at(i)->toString();
+			char nextOp = NULL;
+			if (i < this->operators->size()) {
+				nextOp = this->operators->at(i);
+			}
+
+			if (nextOp != NULL && nextOp == '/' && hasAddSub) {
+				number = "(" + number + ")";
+			}
+
+			toReturn += number;
 		}
-		else if (openedParanthases && i < this->numbers->size()) {
-			toReturn += this->numbers->at(i)->toString() + ")";
-		}
-		else if (!openedParanthases && i < this->numbers->size()) {
-			toReturn += this->numbers->at(i)->toString();
-		}
-		else if (openedParanthases) {
-			toReturn += ")";
+		else if (i - 1 < this->operators->size()) {
+			char op = this->operators->at(i - 1);
+			char nextOp = NULL;
+			if (i < this->operators->size()) {
+				nextOp = this->operators->at(i);
+			}
+			std::string number = this->numbers->at(i)->toString();
+
+			if (op == number[0]) {
+				op = '+';
+				number = number.substr(1, number.length());
+			}
+			else if (op == '+' && number[0] == '-') {
+				op = '-';
+				number = number.substr(1, number.length());
+			}
+
+			if (nextOp != NULL && nextOp == '/' && hasAddSub) {
+				number = "(" + number + ")";
+			}
+
+			toReturn +=  op + number;
 		}
 	}
 

@@ -220,6 +220,22 @@ Number& Exponent::operator/(Number& rhs) {
 }
 
 std::string Exponent::toString() {
+	if (typeid(*this->exponent) == typeid(Placeholder) && typeid(*this->base) != typeid(Placeholder)) {
+		return this->base->toString() + "^(" + this->exponent->toString() + ")";
+	}
+	else if (typeid(*this->exponent) != typeid(Placeholder) && typeid(*this->base) == typeid(Placeholder)) {
+		return "(" + this->base->toString() + ")^" + this->exponent->toString();
+	}
+	else if (typeid(*this->exponent) == typeid(Placeholder) && typeid(*this->base) == typeid(Placeholder)) {
+		return "(" + this->base->toString() + ")^(" + this->exponent->toString() + ")";
+	}
+	else if (typeid(*this->base) == typeid(Integer)) {
+		Integer * integer = dynamic_cast<Integer*>(this->base);
+		if (integer->getInt() < 0) {
+			return "(" + this->base->toString() + ")^" + this->exponent->toString();
+		}
+	}
+	
 	return this->base->toString() + "^" + this->exponent->toString();
 }
 
