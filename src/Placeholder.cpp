@@ -433,7 +433,6 @@ Number& Placeholder::operator-(Number& rhs) {
 				}
 
 				if (lhsPlaceholders->size() > 0) {
-					Number * toReturn = NULL;
 					for (int y = 0; y < lhsPlaceholders->size(); y++) {
 						if (canAddOrSubtract(lhsPlaceholders->at(y), innerPH)) {
 							for (int x = 0; x < lhsPlaceholders->at(y)->getNumbers().size(); x++) {
@@ -1110,7 +1109,6 @@ std::string Placeholder::toString() {
 			}
 			else if (integer->getInt() == 0) {
 				int highExtrenum = i;
-				int lowExtrenum = 0;
 				for (int x = i; x < this->operators->size(); x++) {
 					if (this->operators->at(x) == '*' || this->operators->at(x) == '/') {
 						highExtrenum = x + 2;

@@ -42,7 +42,6 @@ string Calculator::SimplifyExpression(string equation) {
 		}
 		else if (equation[i] == '(') {
 			hasOperators = false;
-			bool foundClose = false;
 			bool isEnd = false;
 			int closeBracket = -1;
 			int indexOfNextOp = -1;

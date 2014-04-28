@@ -204,7 +204,6 @@ Number& Root::simplify(){
 		Placeholder * basePlaceholder = dynamic_cast<Placeholder*>(base);
 		if (typeid(basePlaceholder->getNumbers().at(0)) == typeid(Integer)) {
 			Integer * negBaseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(0));
-			Integer * baseInt = dynamic_cast<Integer*>(basePlaceholder->getNumbers().at(1));
 			if (typeid(*root) == typeid(Integer)) {
 				Integer * rootInt = dynamic_cast<Integer*>(root);
 				if (negBaseInt->getInt() < 0 && rootInt->getInt() % 2 == 0) {
@@ -286,7 +285,6 @@ std::string Root::toString() {
 Number& Root::operator+(Number& rhs) {
 	if (Root * rhsCast = dynamic_cast<Root*>(&rhs)) {
 		if ((rhsCast->getBase() == *this->base) && (rhsCast->getRoot() == *this->root)) {
-			Number * integer = new Integer(2);
 			std::vector<Number*> * numbers = new std::vector<Number*>();
 			std::vector<char> * operators = new std::vector<char>();
 			numbers->push_back(&this->clone());
